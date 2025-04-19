@@ -5,8 +5,8 @@ from starlette.requests import Request
 from starlette.websockets import WebSocket
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
-import asyncio
 
+from flowstate.agents import ManagingAgent
 from flowstate.auth import verify_access_token, verify_login_token, generate_access_token, send_auth_email
 from flowstate.db_models import get_db
 
@@ -74,15 +74,13 @@ async def logout(request: Request):
 
 async def chat_websocket(websocket: WebSocket):
     await websocket.accept()
+    agent = ManagingAgent()
     try:
         while True:
             data = await websocket.receive_text()
-            # Process the message here
-            # For now, we'll just echo it back
-            response = f"Echo: {data}"
-            # Add a 2-second delay for testing the loading indicator
-            await asyncio.sleep(2)
-            await websocket.send_text(response)
+            await websocket.send_text(
+                await agent.send_prompt(data)
+            )
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:

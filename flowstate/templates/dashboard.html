@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flowstate - Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     .chat-messages {
       display: flex;
@@ -22,10 +23,73 @@
       align-self: flex-start;
       text-align: left;
     }
+    /* Markdown styles */
+    .markdown-content h1 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content h2 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-top: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content h3 {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content p {
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content ul, .markdown-content ol {
+      margin-left: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content ul {
+      list-style-type: disc;
+    }
+    .markdown-content ol {
+      list-style-type: decimal;
+    }
+    .markdown-content code {
+      font-family: monospace;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 0.1rem 0.2rem;
+      border-radius: 0.2rem;
+    }
+    .markdown-content pre {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem;
+      border-radius: 0.3rem;
+      overflow-x: auto;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content blockquote {
+      border-left: 3px solid #6366F1;
+      padding-left: 0.5rem;
+      margin-left: 0.5rem;
+      color: #9CA3AF;
+    }
+    .markdown-content a {
+      color: #6366F1;
+      text-decoration: underline;
+    }
+    .markdown-content table {
+      border-collapse: collapse;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content th, .markdown-content td {
+      border: 1px solid #4B5563;
+      padding: 0.3rem 0.5rem;
+    }
 
     @keyframes slideUpFadeIn {
       0% {
-        transform: translateY(50%);
+        transform: translateY(50px);
         opacity: 0;
       }
       50% {
@@ -40,7 +104,7 @@
     @keyframes slideUpFadeOut {
       from {
         opacity: 1;
-        transform: translateY(100%);
+        transform: translateY(100px);
       }
       to {
         opacity: 0;
@@ -197,6 +261,28 @@
       const chatMessages = document.getElementById('chat-messages');
       const loadingIndicator = document.getElementById('loading-indicator');
 
+      // Listen for keydown events on the document to focus the input field
+      document.addEventListener('keydown', function(event) {
+        // Check if the key pressed is a printable character and not a modifier key
+        const isPrintableKey = event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey;
+
+        // If the chat input is not already focused and a printable key is pressed
+        if (document.activeElement !== chatInput && isPrintableKey) {
+          // Focus the input field
+          chatInput.focus();
+
+          // Add the pressed key to the input field
+          chatInput.value += event.key;
+
+          // Prevent default to avoid double input
+          event.preventDefault();
+
+          // Set cursor position to the end of the input
+          const length = chatInput.value.length;
+          chatInput.setSelectionRange(length, length);
+        }
+      });
+
       // Set random placeholder text for chat input
       const placeholders = [
         "Let's do...",
@@ -284,8 +370,25 @@
         // Create new message element
         const messageElement = document.createElement('div');
         messageElement.classList.add(type === 'user' ? 'user-message' : 'system-message');
-        messageElement.classList.add('message-fade-in');
-        messageElement.innerHTML = `<p>${message}</p>`;
+        messageElement.classList.add('message-fade-in', 'markdown-content');
+
+        // Convert markdown to HTML using marked.js
+        try {
+          // Configure marked for security
+          marked.setOptions({
+            sanitize: true, // Sanitize HTML to prevent XSS attacks
+            breaks: true,   // Convert line breaks to <br>
+            gfm: true       // Enable GitHub Flavored Markdown
+          });
+
+          // Parse markdown to HTML
+          const htmlContent = marked.parse(message);
+          messageElement.innerHTML = htmlContent;
+        } catch (error) {
+          console.error('Error parsing markdown:', error);
+          // Fallback to plain text if markdown parsing fails
+          messageElement.innerHTML = `<p>${message}</p>`;
+        }
 
         // Remove old messages after animation completes
         setTimeout(() => {
