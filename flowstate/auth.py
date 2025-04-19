@@ -3,6 +3,21 @@ import hmac
 from contextlib import suppress
 from datetime import datetime, UTC
 
+import flowstate.secrets
+from flowstate.emails import Email, send_email, Sender
+
+
+def send_auth_email(email: str, secret_key: str):
+    """Send an email with a login token."""
+    token = generate_login_token(email, secret_key)
+    sender = flowstate.secrets.get_secrets("email", Sender)
+    email = Email(
+        to=email,
+        subject="Login to Flowstate",
+        body=f"Hi! Login with this link: http://localhost:8000/login?t={token}",
+    )
+    send_email(email, sender)
+
 
 def generate_login_token(email: str, secret_key: str) -> str:
     """Generate a HMAC-signed login token that's base64-encoded."""
