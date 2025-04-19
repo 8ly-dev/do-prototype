@@ -11,3 +11,4 @@ wheels/
 .idea
 .python-version
 secrets.*
+.DS_Store
