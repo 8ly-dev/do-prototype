@@ -5,6 +5,96 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flowstate - Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .user-message {
+      padding: 0.75rem;
+      margin: 0 auto 0.75rem auto;
+      align-self: flex-end;
+    }
+    .system-message {
+      padding: 0.75rem;
+      margin: 0.75rem auto 0 auto;
+      align-self: flex-start;
+      text-align: left;
+    }
+
+    @keyframes slideUpFadeIn {
+      0% {
+        transform: translateY(50%);
+        opacity: 0;
+      }
+      50% {
+        opacity: 0.5;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUpFadeOut {
+      from {
+        opacity: 1;
+        transform: translateY(100%);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(0);
+      }
+    }
+
+    .message-fade-in {
+      opacity: 0;
+      animation: slideUpFadeIn 720ms linear forwards;
+      animation-delay: 360ms;
+    }
+
+    .message-fade-out {
+      animation: slideUpFadeOut 720ms linear forwards;
+    }
+
+    .loading-indicator {
+      display: none;
+      text-align: center;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+    .loading-dots {
+      display: inline-block;
+    }
+    .loading-dots span {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #6366F1;
+      margin: 0 3px;
+      animation: pulse 1.4s infinite ease-in-out;
+    }
+    .loading-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .loading-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(0.75);
+        opacity: 0.5;
+      }
+      50% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+  </style>
 </head>
 <body class="bg-black text-gray-100 min-h-screen">
   <div class="flex h-screen">
@@ -42,7 +132,7 @@
       </header>
 
       <!-- Main Task Area -->
-      <main class="flex-1 p-8">
+      <main class="flex-1 p-8 flex flex-col">
         <div class="mb-8">
           <h2 class="text-xl font-semibold text-white mb-6">Next Task</h2>
           <div class="border border-zinc-800 rounded-md p-6 bg-zinc-900">
@@ -66,16 +156,158 @@
             {% endif %}
           </div>
         </div>
+
       </main>
 
-      <!-- Action Input -->
-      <div class="bg-zinc-900 border-t border-zinc-800 p-6">
+      <!-- Chat Area -->
+      <div class="rounded-md bg-transparent mb-4 flex-grow-0">
+        <div class="max-w-4xl mx-auto p-4 relative">
+          <div id="chat-messages" class="chat-messages flex flex-col space-y-2">
+          </div>
+          <!-- Loading indicator -->
+          <div id="loading-indicator" class="loading-indicator">
+            <div class="loading-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input -->
+      <div class="p-6">
         <div class="max-w-4xl mx-auto">
-          <input type="text" placeholder="Type an action..."
-                 class="w-full py-3 px-4 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-base">
+          <form id="chat-form" class="flex">
+            <input type="text" id="chat-input" placeholder="Let's do..." autocomplete="off"
+                   class="flex-1 py-3 px-4 bg-zinc-800 border border-zinc-700 rounded-l-md text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-base">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-r-md transition-colors duration-200">
+              →
+            </button>
+          </form>
         </div>
       </div>
     </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const chatForm = document.getElementById('chat-form');
+      const chatInput = document.getElementById('chat-input');
+      const chatMessages = document.getElementById('chat-messages');
+      const loadingIndicator = document.getElementById('loading-indicator');
+
+      // Set random placeholder text for chat input
+      const placeholders = [
+        "Let's do...",
+        "I want to...",
+        "Remind me to...",
+        "Schedule...",
+        "Start working on...",
+        "Don't forget to...",
+        "Add a task to...",
+        "Plan to...",
+        "Set up...",
+        "Finish...",
+        "Organize...",
+        "Help me with..."
+      ];
+
+      // Function to update placeholder text randomly
+      function updatePlaceholder() {
+        chatInput.placeholder = placeholders[Math.floor(Math.random() * placeholders.length)];
+      }
+
+      // Set initial placeholder
+      updatePlaceholder();
+
+      // Change placeholder every 30 seconds
+      setInterval(updatePlaceholder, 30000);
+
+      // Create WebSocket connection
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+      // Connection opened
+      socket.addEventListener('open', function(event) {
+        console.log('Connected to WebSocket server');
+      });
+
+      // Listen for messages
+      socket.addEventListener('message', function(event) {
+        // Hide loading indicator when response is received
+        hideLoadingIndicator();
+
+        const message = event.data;
+        addMessage(message, 'system');
+      });
+
+      // Connection closed
+      socket.addEventListener('close', function(event) {
+        console.log('Disconnected from WebSocket server');
+        hideLoadingIndicator();
+        addMessage('Connection closed. Please refresh the page to reconnect.', 'system');
+      });
+
+      // Connection error
+      socket.addEventListener('error', function(event) {
+        console.error('WebSocket error:', event);
+        hideLoadingIndicator();
+        addMessage('Error connecting to server.', 'system');
+      });
+
+      // Send message
+      chatForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const message = chatInput.value.trim();
+
+        if (message) {
+          // Send message to server
+          socket.send(message);
+
+          // Show loading indicator
+          showLoadingIndicator();
+
+          // Clear input
+          chatInput.value = '';
+        }
+      });
+
+      // Add message to chat
+      function addMessage(message, type) {
+        // Apply fade-out animation to existing messages
+        const existingMessages = chatMessages.querySelectorAll('.user-message, .system-message');
+        existingMessages.forEach(msg => {
+          msg.classList.add('message-fade-out');
+        });
+
+        // Create new message element
+        const messageElement = document.createElement('div');
+        messageElement.classList.add(type === 'user' ? 'user-message' : 'system-message');
+        messageElement.classList.add('message-fade-in');
+        messageElement.innerHTML = `<p>${message}</p>`;
+
+        // Remove old messages after animation completes
+        setTimeout(() => {
+          existingMessages.forEach(msg => {
+            chatMessages.removeChild(msg);
+          });
+        }, 1000); // Match animation duration
+
+        // Add new message
+        chatMessages.appendChild(messageElement);
+      }
+
+      // Show loading indicator
+      function showLoadingIndicator() {
+        loadingIndicator.style.display = 'block';
+      }
+
+      // Hide loading indicator
+      function hideLoadingIndicator() {
+        loadingIndicator.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>

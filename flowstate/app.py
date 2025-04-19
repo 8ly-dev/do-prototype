@@ -1,9 +1,11 @@
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse, RedirectResponse
-from starlette.routing import Route
+from starlette.routing import Route, WebSocketRoute
 from starlette.requests import Request
+from starlette.websockets import WebSocket
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
+import asyncio
 
 from flowstate.auth import verify_access_token, verify_login_token, generate_access_token, send_auth_email
 from flowstate.db_models import get_db
@@ -70,6 +72,23 @@ async def logout(request: Request):
     return response
 
 
+async def chat_websocket(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Process the message here
+            # For now, we'll just echo it back
+            response = f"Echo: {data}"
+            # Add a 2-second delay for testing the loading indicator
+            await asyncio.sleep(2)
+            await websocket.send_text(response)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+    finally:
+        await websocket.close()
+
+
 app = Starlette(
     debug=True,
     routes=[
@@ -77,5 +96,6 @@ app = Starlette(
         Route("/login", login_get, methods=["GET"]),
         Route("/login", login_post, methods=["POST"]),
         Route("/logout", logout),
+        WebSocketRoute("/ws", chat_websocket),
     ]
 )
