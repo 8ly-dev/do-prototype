@@ -3,6 +3,19 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List
 
+# --- Singleton DB Instance ---
+_db_instance = None
+
+def get_db(db_path="flowstate.db") -> 'FlowstateDB':
+    """
+    Returns a singleton instance of FlowstateDB.
+    This ensures we reuse the same database connection throughout the application.
+    """
+    global _db_instance
+    if _db_instance is None:
+        _db_instance = FlowstateDB(db_path)
+    return _db_instance
+
 # --- Dataclasses ---
 
 @dataclass

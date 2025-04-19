@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
 from flowstate.auth import verify_access_token, verify_login_token, generate_access_token, send_auth_email
-from flowstate.db_models import FlowstateDB
+from flowstate.db_models import get_db
 
 templates = Environment(
     loader=FileSystemLoader(Path(__file__).parent / "templates")
@@ -18,7 +18,7 @@ async def homepage(request: Request):
     if token:
         user_id = verify_access_token(token)
         if user_id:
-            db = FlowstateDB()
+            db = get_db()
             projects = db.get_projects_by_user(user_id)
             top_task = db.get_users_top_task(user_id)
 
