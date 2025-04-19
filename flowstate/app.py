@@ -34,8 +34,18 @@ async def login_get(request: Request):
     if token:
         email = verify_login_token(token)
         if email:
+            db = get_db()
+            user = db.get_user_by_email(email)
+
+            if user:
+                # User exists, use their ID
+                user_id = user.id
+            else:
+                # User doesn't exist, create a new user
+                user_id = db.insert_user(email)
+
             response = RedirectResponse(url="/", status_code=302)
-            response.set_cookie("SESSION_TOKEN", generate_access_token(1))
+            response.set_cookie("SESSION_TOKEN", generate_access_token(user_id))
             return response
 
     return RedirectResponse(url="/", status_code=302)
