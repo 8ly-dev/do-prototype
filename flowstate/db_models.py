@@ -188,3 +188,22 @@ class FlowstateDB:
         c = self.conn.cursor()
         c.execute('DELETE FROM projects WHERE id = ?', (project_id,))
         self.conn.commit()
+
+    def get_users_top_task(self, user_id: int) -> Optional[Task]:
+        """
+        Get the highest priority task for a user across all their projects and milestones.
+        Returns None if the user has no tasks.
+        """
+        c = self.conn.cursor()
+        c.execute('''
+            SELECT t.* FROM tasks t
+            JOIN milestones m ON t.milestone_id = m.id
+            JOIN projects p ON m.project_id = p.id
+            WHERE p.user_id = ?
+            ORDER BY t.priority DESC
+            LIMIT 1
+        ''', (user_id,))
+        row = c.fetchone()
+        if row:
+            return Task(**row)
+        return None

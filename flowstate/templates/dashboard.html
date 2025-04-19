@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flowstate - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-gray-100 min-h-screen">
+  <div class="flex h-screen">
+    <!-- Sidebar with Projects -->
+    <div class="w-72 bg-zinc-900 border-r border-zinc-800">
+      <div class="p-6">
+        <h2 class="text-xl font-semibold text-white">Projects</h2>
+        <nav class="mt-8">
+          <ul class="space-y-3">
+            <!-- Project list populated dynamically -->
+            {% if projects %}
+              {% for project in projects %}
+              <li>
+                <a href="#" class="block px-4 py-3 text-base text-gray-300 hover:bg-zinc-800 hover:text-white rounded-md transition-colors duration-200">{{ project.name }}</a>
+              </li>
+              {% endfor %}
+            {% else %}
+              <li>
+                <p class="px-4 py-3 text-base text-gray-500">No projects yet</p>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+      <!-- Top Navigation -->
+      <header class="bg-zinc-900 border-b border-zinc-800">
+        <div class="flex justify-between items-center px-8 py-6">
+          <h1 class="text-2xl font-semibold text-white">Dashboard</h1>
+          <a href="/logout" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Logout</a>
+        </div>
+      </header>
+
+      <!-- Main Task Area -->
+      <main class="flex-1 p-8">
+        <div class="mb-8">
+          <h2 class="text-xl font-semibold text-white mb-6">Next Task</h2>
+          <div class="border border-zinc-800 rounded-md p-6 bg-zinc-900">
+            <!-- Task content populated dynamically -->
+            {% if top_task %}
+              <div>
+                <h3 class="text-xl font-medium text-white mb-2">{{ top_task.title }}</h3>
+                {% if top_task.description %}
+                  <p class="text-gray-300 mb-4">{{ top_task.description }}</p>
+                {% endif %}
+                <div class="flex items-center text-sm text-gray-400">
+                  {% if top_task.due_date %}
+                    <span class="mr-4">Due: {{ top_task.due_date }}</span>
+                  {% endif %}
+                  <span class="mr-4">Priority: {{ top_task.priority }}</span>
+                  <span>Type: {{ top_task.task_type }}</span>
+                </div>
+              </div>
+            {% else %}
+              <p class="text-gray-400 text-lg">No tasks available</p>
+            {% endif %}
+          </div>
+        </div>
+      </main>
+
+      <!-- Action Input -->
+      <div class="bg-zinc-900 border-t border-zinc-800 p-6">
+        <div class="max-w-4xl mx-auto">
+          <input type="text" placeholder="Type an action..."
+                 class="w-full py-3 px-4 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent text-base">
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

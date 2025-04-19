@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flowstate - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-gray-100 min-h-screen flex items-center justify-center p-8">
+  <div class="max-w-md w-full mx-auto py-12 px-8">
+    <h1 class="text-3xl font-bold text-center mb-10 text-white">Welcome to Flowstate</h1>
+    <form action="/login" method="POST" class="space-y-6">
+      <div>
+        <label for="email" class="block text-base font-medium text-gray-300 mb-2">Email address</label>
+        <input type="email" id="email" name="email" required
+               class="block w-full py-3 px-4 bg-zinc-900 border border-zinc-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+               placeholder="Enter your email">
+      </div>
+      <div class="pt-4">
+        <button type="submit"
+                class="w-full py-3 px-4 border border-zinc-700 rounded-md text-base font-medium text-white bg-zinc-800 hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-white transition-colors duration-200">
+          Send Login Link
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
