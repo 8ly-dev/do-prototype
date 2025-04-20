@@ -3,10 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flowstate - Dashboard</title>
+  <title>Flowstate</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
+    body {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+    .sidebar {
+      background-color: #0a0a0a;
+      width: 250px;
+    }
+    .project-link {
+      color: #a0a0a0;
+      transition: color 0.2s;
+    }
+    .project-link:hover {
+      color: #ffffff;
+    }
+    .right-now-card {
+      background-color: #141414;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .chat-area {
+      height: calc(100vh - 200px);
+      overflow-y: auto;
+    }
+    .input-area {
+      background-color: #141414;
+      border-radius: 8px;
+    }
     .chat-messages {
       display: flex;
       flex-direction: column;
@@ -158,98 +186,84 @@
         opacity: 1;
       }
     }
+    .complete-task-button {
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .complete-task-button:hover {
+      transform: scale(1.1);
+      background-color: #4F46E5;
+    }
+    .complete-task-button:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
-<body class="bg-black text-gray-100 min-h-screen">
+<body>
   <div class="flex h-screen">
-    <!-- Sidebar with Projects -->
-    <div class="w-72 bg-zinc-900 border-r border-zinc-800">
+    <!-- Sidebar -->
+    <div class="sidebar h-full flex flex-col">
       <div class="p-6">
-        <h2 class="text-xl font-semibold text-white">Projects</h2>
-        <nav class="mt-8">
-          <ul class="space-y-3">
-            <!-- Project list populated dynamically -->
-            {% if projects %}
-              {% for project in projects %}
-              <li>
-                <a href="#" class="block px-4 py-3 text-base text-gray-300 hover:bg-zinc-800 hover:text-white rounded-md transition-colors duration-200">{{ project.name }}</a>
-              </li>
-              {% endfor %}
-            {% else %}
-              <li>
-                <p class="px-4 py-3 text-base text-gray-500">No projects yet</p>
-              </li>
-            {% endif %}
+        <h1 class="text-xl font-semibold mb-8">Projects</h1>
+        <nav>
+          <ul class="space-y-4">
+            <li><a href="#" class="project-link">Brainstorm Engine</a></li>
+            <li><a href="#" class="project-link">Launch Sequence</a></li>
+            <li><a href="#" class="project-link">Knowledge Garden</a></li>
+            <li><a href="#" class="project-link">Build Pipeline</a></li>
+            <li><a href="#" class="project-link">Vision Mapping</a></li>
+            <li><a href="#" class="project-link">UI Polish Sprint</a></li>
+            <li><a href="#" class="project-link">Growth Tactics</a></li>
+            <li><a href="#" class="project-link">Feedback Loop</a></li>
           </ul>
         </nav>
+      </div>
+      <div class="mt-auto p-6">
+        <a href="/logout" class="project-link">Logout</a>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col">
-      <!-- Top Navigation -->
-      <header class="bg-zinc-900 border-b border-zinc-800">
-        <div class="flex justify-between items-center px-8 py-6">
-          <h1 class="text-2xl font-semibold text-white">Dashboard</h1>
-          <a href="/logout" class="text-base text-gray-300 hover:text-white transition-colors duration-200">Logout</a>
-        </div>
-      </header>
-
-      <!-- Main Task Area -->
-      <main class="flex-1 p-8 flex flex-col">
-        <div class="mb-8">
-          <h2 class="text-xl font-semibold text-white mb-6">Next Task</h2>
-          <div class="border border-zinc-800 rounded-md p-6 bg-zinc-900">
-            <!-- Task content populated dynamically -->
-            {% if top_task %}
-              <div>
-                <h3 class="text-xl font-medium text-white mb-2">{{ top_task.title }}</h3>
-                {% if top_task.description %}
-                  <p class="text-gray-300 mb-4">{{ top_task.description }}</p>
-                {% endif %}
-                <div class="flex items-center text-sm text-gray-400">
-                  {% if top_task.due_date %}
-                    <span class="mr-4">Due: {{ top_task.due_date }}</span>
-                  {% endif %}
-                  <span class="mr-4">Priority: {{ top_task.priority }}</span>
-                  <span>Type: {{ top_task.task_type }}</span>
-                </div>
-              </div>
-            {% else %}
-              <p class="text-gray-400 text-lg">No tasks available</p>
-            {% endif %}
-          </div>
-        </div>
-
-      </main>
-
-      <!-- Chat Area -->
-      <div class="rounded-md bg-transparent mb-4 flex-grow-0">
-        <div class="max-w-4xl mx-auto p-4 relative">
-          <div id="chat-messages" class="chat-messages flex flex-col space-y-2">
-          </div>
-          <!-- Loading indicator -->
-          <div id="loading-indicator" class="loading-indicator">
-            <div class="loading-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
+    <div class="flex-1 p-8 flex flex-col">
+      <!-- Right Now Section -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-4">Right Now</h2>
+        <div class="right-now-card flex justify-between items-center">
+          <p class="text-gray-300">The user's highest priority task goes here</p>
+          <div id="complete-task-btn" 
+               class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center complete-task-button"
+               role="button"
+               tabindex="0"
+               aria-label="Complete task">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
           </div>
         </div>
       </div>
 
-      <!-- Chat Input -->
-      <div class="p-6">
-        <div class="max-w-4xl mx-auto">
-          <form id="chat-form" class="flex">
-            <input type="text" id="chat-input" placeholder="Let's do..." autocomplete="off"
-                   class="flex-1 py-3 px-4 bg-zinc-800 border border-zinc-700 rounded-l-md text-white focus:outline-none text-base">
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-r-md transition-colors duration-200">
-              →
-            </button>
-          </form>
+      <!-- Chat Area -->
+      <div class="chat-area flex-1 mb-6">
+        <div id="chat-messages" class="space-y-4">
+          <!-- Chat messages will be inserted here -->
         </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <form id="chat-form" class="flex items-center p-2">
+          <input type="text" 
+                 id="chat-input" 
+                 placeholder="I need to..." 
+                 class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none px-4 py-3"
+                 autocomplete="off">
+          <button type="submit" 
+                  class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center ml-2 hover:bg-indigo-700 transition-colors">
+            <svg class="w-6 h-6 text-white transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+          </button>
+        </form>
       </div>
     </div>
   </div>
@@ -260,6 +274,7 @@
       const chatInput = document.getElementById('chat-input');
       const chatMessages = document.getElementById('chat-messages');
       const loadingIndicator = document.getElementById('loading-indicator');
+      const completeTaskBtn = document.getElementById('complete-task-btn');
 
       // Listen for keydown events on the document to focus the input field
       document.addEventListener('keydown', function(event) {
@@ -356,6 +371,33 @@
 
           // Clear input
           chatInput.value = '';
+        }
+      });
+
+      // Task completion handler
+      completeTaskBtn.addEventListener('click', function() {
+        // Send task completion to server
+        socket.send(JSON.stringify({
+          type: 'complete_task',
+          timestamp: new Date().toISOString()
+        }));
+
+        // Visual feedback
+        this.classList.add('bg-green-500');
+        this.classList.remove('bg-indigo-600');
+        
+        // Reset after animation
+        setTimeout(() => {
+          this.classList.remove('bg-green-500');
+          this.classList.add('bg-indigo-600');
+        }, 1000);
+      });
+
+      // Add keyboard support for task completion
+      completeTaskBtn.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          this.click();
         }
       });
 
