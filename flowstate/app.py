@@ -13,7 +13,7 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 import json
 
-from flowstate.agents import TaskAgent
+from flowstate.agents import LearnMoreAgent, TaskAgent
 from flowstate.auth import verify_access_token, generate_access_token
 from flowstate.db_models import get_db
 from flowstate.task_views import task_view, task_update
@@ -200,6 +200,27 @@ async def chat_websocket(websocket: WebSocket):
             await websocket.close()
 
 
+async def learn_more_chat_websocket(websocket: WebSocket):
+    print("CONNECTING")
+    await websocket.accept()
+    closed = False
+
+    agent = LearnMoreAgent()
+    await websocket.send_text("!!COMMAND: typing!!")
+    await asyncio.sleep(1)
+    await websocket.send_text(agent.readme)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            response = await agent.send_prompt(data)
+            await websocket.send_text(response)
+    except starlette.websockets.WebSocketDisconnect:
+        closed = True
+    finally:
+        if not closed:
+            await websocket.close()
+
+
 async def http_exception(request: Request, exc: HTTPException):
     """
     Handle HTTP exceptions with custom templates.
@@ -220,10 +241,29 @@ async def not_found(request: Request, exc: Exception):
     return HTMLResponse(template.render(), status_code=404)
 
 
+async def learn_more(request: Request):
+    """
+    Handle the Learn More page.
+    """
+    token = request.cookies.get("SESSION_TOKEN")
+    if token:
+        user_id = verify_access_token(token)
+        if user_id:
+            db = get_db()
+            projects = db.get_projects_by_user(user_id)
+
+            template = templates.get_template("learn_more.html")
+            return HTMLResponse(template.render(projects=projects))
+
+    template = templates.get_template("login.html")
+    return HTMLResponse(template.render())
+
+
 app = Starlette(
     debug=True,
     routes=[
         Route("/", homepage),
+        Route("/learn-more", learn_more),
         Route("/login", login_get, methods=["GET"]),
         Route("/login", login_post, methods=["POST"]),
         Route("/logout", logout),
@@ -232,6 +272,7 @@ app = Starlette(
         Route("/task/{task_id:int}/update", task_update, methods=["POST"]),
         WebSocketRoute("/ws", chat_websocket),
         WebSocketRoute("/ws/{project_id:int}", chat_websocket),
+        WebSocketRoute("/ws/learn-more", learn_more_chat_websocket),
     ],
     exception_handlers={
         404: not_found,
