@@ -5,7 +5,7 @@ from pydantic_ai.models.groq import GroqModel
 from pydantic_ai.providers.groq import GroqProvider
 from pydantic_ai import Agent as PydanticAgent
 
-from flowstate.db_models import get_db
+from flowstate.db_models import get_db, Project
 from flowstate.secrets import get_secrets
 
 _model = None
@@ -99,8 +99,55 @@ class TaskAgent(Agent):
         self.user_id = user_id
 
     async def create_project(self, name: str) -> str:
-        """Create a new project with a given name."""
+        """Creates a new project. Please ensure that project names are unique before calling this method. Convert
+        names to title case for better user experience. If there's a similar project name, ask the user what they
+        want to do."""
         db = get_db()
+        if name in await self.get_project_names():
+            return "Project name already exists."
+
         project_id = db.insert_project(self.user_id, name)
         print(f"DB :: Created project {name} with ID {project_id}.")
         return f"Created project {name}."
+
+    async def delete_project(self, project_name: str) -> str:
+        """Deletes a project. Look up the existing projects and pass the name that most closely matches the users 
+        request to this method. If the project name is not found, return an error message."""
+        db = get_db()
+        if project := await self._find_project_by_name(project_name):
+            db.delete_project(project.id)
+            print(f"DB :: Deleted project {project_name} with ID {project.id}.")
+            return f"Deleted project {project_name}."
+
+        else:
+            return "Project not found."
+
+    async def create_task(self, project_name: str, title: str, description: str, due_date: str, priority: int, task_type: str) -> str:
+        """Creates a new task. Look up the existing projects and use the name that most closely matches the users
+        request. If the project name is not found, return an error message. If the user isn't clear about the
+        project, pick the most relevant project and use that."""
+        db = get_db()
+        if project := await self._find_project_by_name(project_name):
+            task_id = db.insert_task(project.id, title, description, due_date, priority, task_type)
+            print(f"DB :: Created task {title} with ID {task_id}.")
+            return f"Created task {title}."
+
+        return "Project not found."
+
+    async def get_project_names(self) -> list[str]:
+        """Returns a list of project names for the current user."""
+        db = get_db()
+        projects = db.get_projects_by_user(self.user_id)
+        print(f"DB :: Retrieved {len(projects)} projects for user {self.user_id}.")
+        return [project.name for project in projects]
+
+    async def _find_project_by_name(self, project_name: str) -> Project | None:
+        """Helper method to find a project by name. Returns the project ID if found, or None otherwise."""
+        db = get_db()
+        projects = db.get_projects_by_user(self.user_id)
+        for project in projects:
+            if project.name.lower() == project_name.lower():
+                return project
+
+        else:
+            return None
