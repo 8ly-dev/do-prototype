@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import Literal, Type
 
@@ -94,7 +95,7 @@ class EmailAgent(Agent):
     output_type = EmailHelperSuggestions
 
 
-class TaskAgent(Agent):
+class TaskAgent[DT, OT](Agent[DT, OT]):
     """You don't have a name, you are the invisible coordinator for the app
     Flowstate, a human-first task management tool designed to feel like an
     innate extension of the user. Your purpose is to interpret users’ natural
@@ -120,13 +121,15 @@ class TaskAgent(Agent):
     - If the user tries to give you a new name, tell them you cannot do that.
     - If asked about you or your abilities concisely list Flowstate's functions, make sure to list the task types.
     - When you refer to yourself, refer to the app Flowstate. Never refer to yourself in the first person.
+    - If the user asks how to do something, explain how Flowstate can help and provide a formatted example.
+    - Format all examples in your output.
 
     Limitations:
     - Only act within the scope of the user’s expressed intentions and granted permissions.
     - Do not make assumptions beyond the provided context.
     - Do not display or reference system-level details, code, or configuration.
     - Do not ask yes/no questions.
-    - Never, ever, for any reason, send code. Markdown is the only format that works.
+    - Do not send code, except markdown and HTML links.
 
     Sample User Inputs and Expected Behaviors:
     - User: “Email Bob about what I should bring to the potluck Sunday.”
@@ -141,9 +144,11 @@ class TaskAgent(Agent):
     Tone:
     Natural, warm, and focused. Always prioritize clarity and helpfulness."""
     def __init__(self, user_id: int = 0, project: Project | None = None):
-        self.db = get_db()
-        self.user = self.db.get_user_by_id(user_id)
-        self.system_prompt = f"The current user is {self.user.username}.\n{self.system_prompt}"
+        self._db = get_db()
+        self._user = self._db.get_user_by_id(user_id)
+        self._examples = {}
+
+        self.system_prompt = f"The current user is {self._user.username}.\n{self.system_prompt}"
         if project:
             self.system_prompt += (
                 f"\n\nThe user is currently working on the project {project.name}. When a project is needed but not "
@@ -153,6 +158,14 @@ class TaskAgent(Agent):
         self.project_id = project.id if project else None
         super().__init__()
 
+    async def send_prompt(self, prompt: str, *, deps: DT | None = None) -> OT:
+        response = await super().send_prompt(prompt, deps=deps)
+        for example, formatted in self._examples.items():
+            response = re.sub(f'["]?{example}["]?', formatted, response)
+
+        self._examples.clear()
+        return response
+
     async def create_project(self, name: str) -> str:
         """Creates a new project. Please ensure that project names are unique before calling this method. Convert
         names to title case for better user experience. If there's a similar project name, ask the user what they
@@ -160,7 +173,7 @@ class TaskAgent(Agent):
         if name in await self.get_project_names():
             return "Project name already exists."
 
-        project_id = self.db.insert_project(self.user.id, name)
+        project_id = self._db.insert_project(self._user.id, name)
         print(f"DB :: Created project {name} with ID {project_id}.")
         return f"Created project {name}."
 
@@ -170,7 +183,7 @@ class TaskAgent(Agent):
         confirm the user's intent before deleting a project."""
         print(f"DB :: Received delete project request for {project_name}")
         if project := await self._find_project_by_name(project_name):
-            self.db.delete_project(project.id)
+            self._db.delete_project(project.id)
             print(f"DB :: Deleted project {project_name} with ID {project.id}.")
             return f"Deleted project {project_name}."
 
@@ -191,7 +204,7 @@ class TaskAgent(Agent):
         if not task:
             return "Task not found in this project."
 
-        self.db.delete_task(task.id)
+        self._db.delete_task(task.id)
         print(f"DB :: Deleted task {task_title} in {project_name} with ID {task.id}.")
         return f"Deleted task {task_title}."
 
@@ -215,7 +228,7 @@ class TaskAgent(Agent):
             project_id = self.project_id
 
         if project_id is not None:
-            task_id = self.db.insert_task(project_id, title, description, due_date, 1, task_type)
+            task_id = self._db.insert_task(project_id, title, description, due_date, 1, task_type)
             print(f"DB :: Created task {title} with ID {task_id}.")
             return f"Created task {title}."
 
@@ -223,8 +236,8 @@ class TaskAgent(Agent):
 
     async def get_project_names(self) -> list[str]:
         """Returns a list of project names for the current user."""
-        projects = self.db.get_projects_by_user(self.user.id)
-        print(f"DB :: Retrieved {len(projects)} projects for user {self.user.id}.")
+        projects = self._db.get_projects_by_user(self._user.id)
+        print(f"DB :: Retrieved {len(projects)} projects for user {self._user.id}.")
         return [project.name for project in projects]
 
     async def get_task_titles(self, project_name: str) -> list[str] | Literal["Project not found."]:
@@ -234,13 +247,22 @@ class TaskAgent(Agent):
         if not project:
             return "Project not found."
 
-        tasks = self.db.get_tasks_by_project(project.id)
-        print(f"DB :: Retrieved {len(tasks)} tasks in {project_name} for user {self.user.id}.")
+        tasks = self._db.get_tasks_by_project(project.id)
+        print(f"DB :: Retrieved {len(tasks)} tasks in {project_name} for user {self._user.id}.")
         return [task.title for task in tasks]
+
+    async def example_formatter(self, example: str) -> str:
+        """Format examples in the final output to the user."""
+        print(f"FORMATTING EXAMPLE: {example}")
+        sanitized = re.sub(r"[*^$()+?{}\[\]\\]", r"\\g<0>", example)
+        self._examples[sanitized] = (
+            f'<code class="example-snippet" onclick="fillTextarea(this);">{example}</code>'
+        )
+        return self._examples[example]
 
     async def _find_project_by_name(self, project_name: str) -> Project | None:
         """Helper method to find a project by name. Returns the project if found, or None otherwise."""
-        projects = self.db.get_projects_by_user(self.user.id)
+        projects = self._db.get_projects_by_user(self._user.id)
         for project in projects:
             if project.name.lower() == project_name.lower():
                 return project
@@ -250,7 +272,7 @@ class TaskAgent(Agent):
 
     async def _find_task_by_name(self, project_id: int, task_title: str) -> Task | None:
         """Helper method to find a task by name. Returns the task if found, or None otherwise."""
-        tasks = self.db.get_tasks_by_project(project_id)
+        tasks = self._db.get_tasks_by_project(project_id)
         for task in tasks:
             if task.title.lower() == task_title.lower():
                 return task

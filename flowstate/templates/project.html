@@ -552,6 +552,9 @@
         loadingIndicator.style.display = 'none';
       }
     });
+    function fillTextarea(linkElement) {
+      document.getElementById("chat-input").value = linkElement.textContent || linkElement.innerText;
+    }
   </script>
 </body>
 </html>
