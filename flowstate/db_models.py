@@ -32,17 +32,9 @@ class Project:
     created_at: str
 
 @dataclass
-class Milestone:
-    id: Optional[int]
-    project_id: int
-    name: str
-    due_date: Optional[str]
-    created_at: str
-
-@dataclass
 class Task:
     id: Optional[int]
-    milestone_id: int
+    project_id: int
     title: str
     description: Optional[str]
     due_date: Optional[str]
@@ -77,26 +69,16 @@ class FlowstateDB:
             )
         ''')
         c.execute('''
-            CREATE TABLE IF NOT EXISTS milestones (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_id INTEGER NOT NULL,
-                name TEXT NOT NULL,
-                due_date TEXT,
-                created_at TEXT NOT NULL,
-                FOREIGN KEY(project_id) REFERENCES projects(id)
-            )
-        ''')
-        c.execute('''
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                milestone_id INTEGER NOT NULL,
+                project_id INTEGER NOT NULL,
                 title TEXT NOT NULL,
                 description TEXT,
                 due_date TEXT,
                 priority INTEGER NOT NULL,
                 task_type TEXT NOT NULL,
                 created_at TEXT NOT NULL,
-                FOREIGN KEY(milestone_id) REFERENCES milestones(id)
+                FOREIGN KEY(project_id) REFERENCES projects(id)
             )
         ''')
         self.conn.commit()
@@ -132,36 +114,21 @@ class FlowstateDB:
         c.execute('SELECT * FROM projects WHERE user_id = ?', (user_id,))
         return [Project(**row) for row in c.fetchall()]
 
-    # --- Milestone Methods ---
-
-    def insert_milestone(self, project_id: int, name: str, due_date: Optional[str]) -> int:
-        now = datetime.utcnow().isoformat()
-        c = self.conn.cursor()
-        c.execute('INSERT INTO milestones (project_id, name, due_date, created_at) VALUES (?, ?, ?, ?)',
-                  (project_id, name, due_date, now))
-        self.conn.commit()
-        return c.lastrowid
-
-    def get_milestones_by_project(self, project_id: int) -> List[Milestone]:
-        c = self.conn.cursor()
-        c.execute('SELECT * FROM milestones WHERE project_id = ?', (project_id,))
-        return [Milestone(**row) for row in c.fetchall()]
-
     # --- Task Methods ---
 
-    def insert_task(self, milestone_id: int, title: str, description: Optional[str], due_date: Optional[str], priority: int, task_type: str) -> int:
+    def insert_task(self, project_id: int, title: str, description: Optional[str], due_date: Optional[str], priority: int, task_type: str) -> int:
         now = datetime.utcnow().isoformat()
         c = self.conn.cursor()
         c.execute('''
-            INSERT INTO tasks (milestone_id, title, description, due_date, priority, task_type, created_at)
+            INSERT INTO tasks (project_id, title, description, due_date, priority, task_type, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (milestone_id, title, description, due_date, priority, task_type, now))
+        ''', (project_id, title, description, due_date, priority, task_type, now))
         self.conn.commit()
         return c.lastrowid
 
-    def get_tasks_by_milestone(self, milestone_id: int) -> List[Task]:
+    def get_tasks_by_project(self, project_id: int) -> List[Task]:
         c = self.conn.cursor()
-        c.execute('SELECT * FROM tasks WHERE milestone_id = ?', (milestone_id,))
+        c.execute('SELECT * FROM tasks WHERE project_id = ?', (project_id,))
         return [Task(**row) for row in c.fetchall()]
 
     # --- Update Methods (Examples) ---
@@ -178,17 +145,6 @@ class FlowstateDB:
         c.execute(sql, values)
         self.conn.commit()
 
-    def update_milestone(self, milestone_id: int, **updates):
-        fields = []
-        values = []
-        for k, v in updates.items():
-            fields.append(f"{k} = ?")
-            values.append(v)
-        values.append(milestone_id)
-        sql = f"UPDATE milestones SET {', '.join(fields)} WHERE id = ?"
-        c = self.conn.cursor()
-        c.execute(sql, values)
-        self.conn.commit()
 
     # --- Delete Methods (Examples) ---
 
@@ -204,14 +160,13 @@ class FlowstateDB:
 
     def get_users_top_task(self, user_id: int) -> Optional[Task]:
         """
-        Get the highest priority task for a user across all their projects and milestones.
+        Get the highest priority task for a user across all their projects.
         Returns None if the user has no tasks.
         """
         c = self.conn.cursor()
         c.execute('''
             SELECT t.* FROM tasks t
-            JOIN milestones m ON t.milestone_id = m.id
-            JOIN projects p ON m.project_id = p.id
+            JOIN projects p ON t.project_id = p.id
             WHERE p.user_id = ?
             ORDER BY t.priority DESC
             LIMIT 1

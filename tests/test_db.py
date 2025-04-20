@@ -30,22 +30,12 @@ def test_project_crud(temp_db):
     projects = db.get_projects_by_user(user_id)
     assert any(p.id == project_id for p in projects)
 
-def test_milestone_crud(temp_db):
-    db = temp_db
-    user_id = db.insert_user("milestoneuser@example.com")
-    project_id = db.insert_project(user_id, "Milestone Project")
-    milestone_id = db.insert_milestone(project_id, "First Milestone", "2025-05-01T00:00:00")
-    assert isinstance(milestone_id, int)
-    milestones = db.get_milestones_by_project(project_id)
-    assert any(m.id == milestone_id for m in milestones)
-
 def test_task_crud(temp_db):
     db = temp_db
     user_id = db.insert_user("taskuser@example.com")
     project_id = db.insert_project(user_id, "Task Project")
-    milestone_id = db.insert_milestone(project_id, "Task Milestone", None)
     task_id = db.insert_task(
-        milestone_id,
+        project_id,
         "Test Task",
         "Task Description",
         "2025-04-20T12:00:00",
@@ -53,26 +43,25 @@ def test_task_crud(temp_db):
         "email"
     )
     assert isinstance(task_id, int)
-    tasks = db.get_tasks_by_milestone(milestone_id)
+    tasks = db.get_tasks_by_project(project_id)
     assert any(t.id == task_id for t in tasks)
 
 def test_update_and_delete(temp_db):
     db = temp_db
     user_id = db.insert_user("updateuser@example.com")
     project_id = db.insert_project(user_id, "Update Project")
-    milestone_id = db.insert_milestone(project_id, "Update Milestone", None)
     task_id = db.insert_task(
-        milestone_id, "Update Task", None, None, 2, "generic"
+        project_id, "Update Task", None, None, 2, "generic"
     )
     # Update task
     db.update_task(task_id, title="Updated Task", priority=5)
-    tasks = db.get_tasks_by_milestone(milestone_id)
+    tasks = db.get_tasks_by_project(project_id)
     updated = [t for t in tasks if t.id == task_id][0]
     assert updated.title == "Updated Task"
     assert updated.priority == 5
     # Delete task
     db.delete_task(task_id)
-    tasks = db.get_tasks_by_milestone(milestone_id)
+    tasks = db.get_tasks_by_project(project_id)
     assert not any(t.id == task_id for t in tasks)
     # Delete project
     db.delete_project(project_id)
