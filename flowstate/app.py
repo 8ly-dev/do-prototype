@@ -1,4 +1,5 @@
 from starlette.applications import Starlette
+from starlette.exceptions import HTTPException
 from starlette.responses import HTMLResponse, RedirectResponse
 from starlette.routing import Route, WebSocketRoute
 from starlette.requests import Request
@@ -72,6 +73,49 @@ async def logout(request: Request):
     return response
 
 
+async def project_view(request: Request):
+    token = request.cookies.get("SESSION_TOKEN")
+    if not token:
+        return RedirectResponse(url="/", status_code=302)
+
+    user_id = verify_access_token(token)
+    if not user_id:
+        return RedirectResponse(url="/", status_code=302)
+
+    # Get project slug from URL
+    project_slug = request.path_params["project_slug"]
+
+    # Get all projects for the user
+    db = get_db()
+    projects = db.get_projects_by_user(user_id)
+
+    # Find the project that matches the slug
+    current_project = None
+    for project in projects:
+        # Create a slug from the project name
+        slug = project.name.lower().replace(" ", "-")
+        if slug == project_slug:
+            current_project = project
+            break
+
+    if not current_project:
+        raise HTTPException(status_code=404, detail="Project Not Found.")
+
+    # Get tasks for this project
+    tasks = db.get_tasks_by_project(current_project.id)
+
+    # Get top task for the user (same as dashboard)
+    top_task = db.get_users_top_task(user_id)
+
+    template = templates.get_template("project.html")
+    return HTMLResponse(template.render(
+        projects=projects,
+        current_project=current_project,
+        tasks=tasks,
+        top_task=top_task
+    ))
+
+
 async def chat_websocket(websocket: WebSocket):
     session_token = websocket.cookies.get("SESSION_TOKEN")
     user_id = verify_access_token(session_token) if session_token else None
@@ -82,9 +126,26 @@ async def chat_websocket(websocket: WebSocket):
 
     await websocket.accept()
     agent = TaskAgent(user_id=user_id)
+    db = get_db()
     try:
         while True:
             data = await websocket.receive_text()
+
+            # Check if this is a task completion request
+            try:
+                json_data = eval(data)
+                if isinstance(json_data, dict) and json_data.get('type') == 'complete_task':
+                    task_id = json_data.get('task_id')
+                    if task_id:
+                        # Delete the task
+                        db.delete_task(int(task_id))
+                        await websocket.send_text(f"Task completed successfully.")
+                        continue
+            except:
+                # Not JSON or not a task completion request, treat as normal message
+                pass
+
+            # Normal message processing
             await websocket.send_text(
                 await agent.send_prompt(data)
             )
@@ -122,6 +183,7 @@ app = Starlette(
         Route("/login", login_get, methods=["GET"]),
         Route("/login", login_post, methods=["POST"]),
         Route("/logout", logout),
+        Route("/project/{project_slug}", project_view),
         WebSocketRoute("/ws", chat_websocket),
     ],
     exception_handlers={
