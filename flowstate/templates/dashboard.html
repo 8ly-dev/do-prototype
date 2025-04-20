@@ -207,14 +207,13 @@
         <h1 class="text-xl font-semibold mb-8">Projects</h1>
         <nav>
           <ul class="space-y-4">
-            <li><a href="#" class="project-link">Brainstorm Engine</a></li>
-            <li><a href="#" class="project-link">Launch Sequence</a></li>
-            <li><a href="#" class="project-link">Knowledge Garden</a></li>
-            <li><a href="#" class="project-link">Build Pipeline</a></li>
-            <li><a href="#" class="project-link">Vision Mapping</a></li>
-            <li><a href="#" class="project-link">UI Polish Sprint</a></li>
-            <li><a href="#" class="project-link">Growth Tactics</a></li>
-            <li><a href="#" class="project-link">Feedback Loop</a></li>
+            {% if not projects %}
+            <li class="project-link">You don't have any projects right now</li>
+            {% else %}
+            {% for project in projects %}
+            <li><a href="#" class="project-link">{{ project.name }}</a></li>
+            {% endfor %}
+            {% endif %}
           </ul>
         </nav>
       </div>
