@@ -6,7 +6,7 @@ from starlette.websockets import WebSocket, WebSocketState
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
-from flowstate.agents import ManagingAgent
+from flowstate.agents import TaskAgent
 from flowstate.auth import verify_access_token, verify_login_token, generate_access_token, send_auth_email
 from flowstate.db_models import get_db
 
@@ -81,7 +81,7 @@ async def chat_websocket(websocket: WebSocket):
         return
 
     await websocket.accept()
-    agent = ManagingAgent()
+    agent = TaskAgent(user_id=user_id)
     try:
         while True:
             data = await websocket.receive_text()
