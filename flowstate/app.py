@@ -145,7 +145,7 @@ async def chat_websocket(websocket: WebSocket):
                 f"heading followed by two sentence using normal formatting (say the user's name somewhere in there). "
                 f"Make sure to mention that you use 'natural language'. Use emoji. Don't forget that you are a helpful "
                 f"assistant that is an innate extension of the user. Be sure to remain invisible, only refer to the "
-                f"app Flowstate, not yourself."
+                f"app Flowstate, not yourself. Remember to use the example formatter."
             )
             duration = time.time() - start
             if duration < 1.5:
@@ -159,7 +159,7 @@ async def chat_websocket(websocket: WebSocket):
         await asyncio.sleep(nudge_delay)
         nudge_message = await agent.send_prompt(
             f"This is the software developer: {user.username} is inactive and hasn't done anything yet. Send a message "
-            f"to inspire them to get started."
+            f"to inspire them to get started. Remember to use the example formatter."
         )
         await websocket.send_text(nudge_message)
 
@@ -167,7 +167,7 @@ async def chat_websocket(websocket: WebSocket):
         nudge_task = loop.create_task(nudge_user())
 
     loop = asyncio.get_running_loop()
-    nudge_delay = 300
+    nudge_delay = 5 * 60
     nudge_task = loop.create_task(nudge_user())
 
     try:
