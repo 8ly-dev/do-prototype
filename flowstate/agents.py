@@ -252,13 +252,13 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
         return [task.title for task in tasks]
 
     async def example_formatter(self, example: str) -> str:
-        """Format examples in the final output to the user."""
+        """Format an example in the final output to the user."""
         print(f"FORMATTING EXAMPLE: {example}")
         sanitized = re.sub(r"[*^$()+?{}\[\]\\]", r"\\g<0>", example)
         self._examples[sanitized] = (
             f'<code class="example-snippet" onclick="fillTextarea(this);">{example}</code>'
         )
-        return self._examples[example]
+        return example
 
     async def _find_project_by_name(self, project_name: str) -> Project | None:
         """Helper method to find a project by name. Returns the project if found, or None otherwise."""
