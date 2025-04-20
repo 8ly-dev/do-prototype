@@ -140,11 +140,11 @@ async def chat_websocket(websocket: WebSocket):
             await websocket.send_text("!!COMMAND: typing!!")
             welcome_message = await agent.send_prompt(
                 f"This is the software developer: {user.username} is new a new user, please great them and let them "
-                f"know how they can get started. Use markdown to send a large welcome heading followed by two sentence "
-                f"using normal formatting (say the user's name somewhere in there). Make sure to mention that you use "
-                f"'natural language' in the input field this is below your message. Use emoji. Don't forget that you "
-                f"are a helpful assistant that is an innate extension of the user. Be sure to remain invisible, only "
-                f"refer to the app Flowstate, not yourself."
+                f"know how they can get started, mention a feature or two. Use markdown to send a large welcome "
+                f"heading followed by two sentence using normal formatting (say the user's name somewhere in there). "
+                f"Make sure to mention that you use 'natural language'. Use emoji. Don't forget that you are a helpful "
+                f"assistant that is an innate extension of the user. Be sure to remain invisible, only refer to the "
+                f"app Flowstate, not yourself."
             )
             duration = time.time() - start
             if duration < 1.5:
