@@ -109,6 +109,14 @@ class FlowstateDB:
         self.conn.commit()
         return c.lastrowid
 
+    def get_project(self, project_id: int) -> Optional[Project]:
+        c = self.conn.cursor()
+        c.execute('SELECT * FROM projects WHERE id = ?', (project_id,))
+        row = c.fetchone()
+        if row:
+            return Project(**row)
+        return None
+
     def get_projects_by_user(self, user_id: int) -> List[Project]:
         c = self.conn.cursor()
         c.execute('SELECT * FROM projects WHERE user_id = ?', (user_id,))
