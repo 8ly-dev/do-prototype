@@ -1,3 +1,4 @@
+import starlette
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.responses import HTMLResponse, RedirectResponse
@@ -11,6 +12,7 @@ import json
 from flowstate.agents import TaskAgent
 from flowstate.auth import verify_access_token, verify_login_token, generate_access_token, send_auth_email
 from flowstate.db_models import get_db
+from flowstate.task_views import task_view, task_update
 
 templates = Environment(
     loader=FileSystemLoader(Path(__file__).parent / "templates")
@@ -119,16 +121,17 @@ async def project_view(request: Request):
 
 async def chat_websocket(websocket: WebSocket):
     db = get_db()
-
+    print("CONNECTING")
     session_token = websocket.cookies.get("SESSION_TOKEN")
     user_id = verify_access_token(session_token) if session_token else None
     project_id = websocket.path_params.get("project_id")
 
     if not user_id:
-        await websocket.close(code=4001)
+        await websocket.close(code=401)
         return
 
     await websocket.accept()
+    closed = False
 
     project = db.get_project(project_id)
     agent = TaskAgent(user_id=user_id, project=project)
@@ -139,6 +142,9 @@ async def chat_websocket(websocket: WebSocket):
             # Check if this is a task completion request
             try:
                 json_data = json.loads(data)
+            except (json.decoder.JSONDecodeError, TypeError):
+                pass
+            else:
                 if isinstance(json_data, dict) and json_data.get('type') == 'complete_task':
                     task_id = json_data.get('task_id')
                     if task_id:
@@ -146,18 +152,15 @@ async def chat_websocket(websocket: WebSocket):
                         db.delete_task(int(task_id))
                         await websocket.send_text(f"Task completed successfully.")
                         continue
-            except:
-                # Not JSON or not a task completion request, treat as normal message
-                pass
 
             # Normal message processing
-            await websocket.send_text(
-                await agent.send_prompt(data)
-            )
-    except Exception as e:
-        print(f"WebSocket error: {e}")
+            response = await agent.send_prompt(data)
+            print(response)
+            await websocket.send_text(response)
+    except starlette.websockets.WebSocketDisconnect:
+        closed = True
     finally:
-        if websocket.state != WebSocketState.DISCONNECTED:
+        if not closed:
             await websocket.close()
 
 
@@ -189,6 +192,9 @@ app = Starlette(
         Route("/login", login_post, methods=["POST"]),
         Route("/logout", logout),
         Route("/project/{project_slug}", project_view),
+        Route("/task/{task_id:int}", task_view),
+        Route("/task/{task_id:int}/update", task_update, methods=["POST"]),
+        WebSocketRoute("/ws", chat_websocket),
         WebSocketRoute("/ws/{project_id:int}", chat_websocket),
     ],
     exception_handlers={

@@ -1,7 +1,16 @@
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List
+from typing import Literal, Optional, List
+
+
+type TaskType = Literal[
+    "todo",  # Basic check box task, created by the user or agent
+    "email",  # Task to draft and send an email, only created by the agent
+    # "reminder",  # Task to create a reminder, only created by the agent
+    "calendar",  # Task to create a calendar event, only created by the agent
+    "create_task",  # Task to create a new task, only created by the agent
+]
 
 # --- Singleton DB Instance ---
 _db_instance = None
@@ -39,7 +48,7 @@ class Task:
     description: Optional[str]
     due_date: Optional[str]
     priority: int
-    task_type: str
+    task_type: TaskType
     created_at: str
 
 # --- Database Layer ---
@@ -100,6 +109,14 @@ class FlowstateDB:
             return User(**row)
         return None
 
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
+        c = self.conn.cursor()
+        c.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+        row = c.fetchone()
+        if row:
+            return User(**row)
+        return None
+
     # --- Project Methods ---
 
     def insert_project(self, user_id: int, name: str) -> int:
@@ -138,6 +155,14 @@ class FlowstateDB:
         c = self.conn.cursor()
         c.execute('SELECT * FROM tasks WHERE project_id = ?', (project_id,))
         return [Task(**row) for row in c.fetchall()]
+
+    def get_task(self, task_id: int) -> Optional[Task]:
+        c = self.conn.cursor()
+        c.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
+        row = c.fetchone()
+        if row:
+            return Task(**row)
+        return None
 
     # --- Update Methods (Examples) ---
 

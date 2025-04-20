@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flowstate - {{ task.title }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+    .sidebar {
+      background-color: #0a0a0a;
+      width: 250px;
+    }
+    .project-link {
+      color: #a0a0a0;
+      transition: color 0.2s;
+    }
+    .project-link:hover {
+      color: #ffffff;
+    }
+    .project-link.active {
+      color: #ffffff;
+      font-weight: bold;
+    }
+    .task-card {
+      background-color: #141414;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .form-input {
+      background-color: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      color: #ffffff;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      width: 100%;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #6366F1;
+    }
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #a0a0a0;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background-color: #6366F1;
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background-color: #4F46E5;
+    }
+    .btn-secondary {
+      background-color: #4B5563;
+      color: #ffffff;
+    }
+    .btn-secondary:hover {
+      background-color: #374151;
+    }
+    /* Markdown editor styles */
+    .markdown-editor {
+      border: 1px solid #3a3a3a;
+      border-radius: 0.375rem;
+      overflow: hidden;
+    }
+    .markdown-editor-toolbar {
+      background-color: #2a2a2a;
+      padding: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .markdown-editor-button {
+      background-color: #3a3a3a;
+      border: none;
+      color: #ffffff;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      cursor: pointer;
+    }
+    .markdown-editor-button:hover {
+      background-color: #4a4a4a;
+    }
+    .markdown-editor-textarea {
+      background-color: #2a2a2a;
+      border: none;
+      color: #ffffff;
+      padding: 0.5rem;
+      width: 100%;
+      min-height: 200px;
+      resize: vertical;
+    }
+    .markdown-editor-textarea:focus {
+      outline: none;
+    }
+    .markdown-preview {
+      background-color: #2a2a2a;
+      padding: 1rem;
+      border-radius: 0.375rem;
+      margin-top: 1rem;
+    }
+    /* Date and time picker styles */
+    .date-time-picker {
+      display: flex;
+      gap: 1rem;
+    }
+    .date-time-picker input {
+      background-color: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      color: #ffffff;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+    }
+    .date-time-picker input:focus {
+      outline: none;
+      border-color: #6366F1;
+    }
+  </style>
+  {% block extra_styles %}{% endblock %}
+</head>
+<body>
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="sidebar h-full flex flex-col">
+      <div class="p-6">
+        <h1 class="text-xl font-semibold mb-8">Projects</h1>
+        <nav>
+          <ul class="space-y-4">
+            {% if not projects %}
+            <li class="project-link">You don't have any projects right now</li>
+            {% else %}
+            {% for project in projects %}
+            <li>
+              {% set project_slug = project.name.lower().replace(" ", "-") %}
+              <a href="/project/{{ project_slug }}" 
+                 class="project-link {% if project.id == current_project.id %}active{% endif %}">
+                {{ project.name }}
+              </a>
+            </li>
+            {% endfor %}
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      <div class="mt-auto p-6">
+        <a href="/" class="project-link">Dashboard</a>
+        <div class="mt-4">
+          <a href="/logout" class="project-link">Logout</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8 flex flex-col">
+      <!-- Task Header -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold">{{ task.title }}</h1>
+        <p class="text-gray-400">
+          <a href="/project/{{ current_project.name.lower().replace(' ', '-') }}" class="text-indigo-400 hover:underline">
+            {{ current_project.name }}
+          </a>
+        </p>
+      </div>
+
+      <!-- Task Content -->
+      <div class="task-card mb-8">
+        <form action="/task/{{ task.id }}/update" method="POST">
+          {% block task_form %}
+          <!-- This will be overridden by specific task templates -->
+          {% endblock %}
+
+          <div class="flex justify-end mt-6 space-x-4">
+            <a href="/project/{{ current_project.name.lower().replace(' ', '-') }}" class="btn btn-secondary">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% block scripts %}
+  <script>
+    // Common JavaScript for all task types
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize markdown editor if present
+      const markdownTextarea = document.querySelector('.markdown-editor-textarea');
+      const markdownPreview = document.querySelector('.markdown-preview');
+      
+      if (markdownTextarea && markdownPreview) {
+        // Update preview on input
+        markdownTextarea.addEventListener('input', function() {
+          updateMarkdownPreview(markdownTextarea, markdownPreview);
+        });
+        
+        // Initial preview
+        updateMarkdownPreview(markdownTextarea, markdownPreview);
+        
+        // Toolbar buttons
+        const boldButton = document.querySelector('.markdown-editor-button[data-action="bold"]');
+        const italicButton = document.querySelector('.markdown-editor-button[data-action="italic"]');
+        const linkButton = document.querySelector('.markdown-editor-button[data-action="link"]');
+        const listButton = document.querySelector('.markdown-editor-button[data-action="list"]');
+        
+        if (boldButton) {
+          boldButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            insertMarkdown(markdownTextarea, '**', '**', 'Bold text');
+          });
+        }
+        
+        if (italicButton) {
+          italicButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            insertMarkdown(markdownTextarea, '*', '*', 'Italic text');
+          });
+        }
+        
+        if (linkButton) {
+          linkButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            insertMarkdown(markdownTextarea, '[', '](https://example.com)', 'Link text');
+          });
+        }
+        
+        if (listButton) {
+          listButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const selection = markdownTextarea.value.substring(
+              markdownTextarea.selectionStart, 
+              markdownTextarea.selectionEnd
+            );
+            
+            if (selection) {
+              // Convert each line to a list item
+              const listItems = selection.split('\n').map(line => `- ${line}`).join('\n');
+              replaceSelection(markdownTextarea, listItems);
+            } else {
+              insertMarkdown(markdownTextarea, '- ', '', 'List item');
+            }
+          });
+        }
+      }
+    });
+    
+    // Helper function to update markdown preview
+    function updateMarkdownPreview(textarea, preview) {
+      if (textarea && preview) {
+        try {
+          marked.setOptions({
+            breaks: true,
+            gfm: true
+          });
+          preview.innerHTML = marked.parse(textarea.value);
+        } catch (error) {
+          console.error('Error parsing markdown:', error);
+          preview.innerHTML = `<p>${textarea.value}</p>`;
+        }
+      }
+    }
+    
+    // Helper function to insert markdown syntax
+    function insertMarkdown(textarea, prefix, suffix, placeholder) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selection = textarea.value.substring(start, end);
+      const replacement = selection || placeholder;
+      
+      textarea.value = 
+        textarea.value.substring(0, start) + 
+        prefix + replacement + suffix + 
+        textarea.value.substring(end);
+      
+      // Set cursor position
+      const newCursorPos = start + prefix.length + replacement.length;
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+      
+      // Update preview
+      const preview = document.querySelector('.markdown-preview');
+      if (preview) {
+        updateMarkdownPreview(textarea, preview);
+      }
+    }
+    
+    // Helper function to replace selection
+    function replaceSelection(textarea, replacement) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      
+      textarea.value = 
+        textarea.value.substring(0, start) + 
+        replacement + 
+        textarea.value.substring(end);
+      
+      // Set cursor position
+      const newCursorPos = start + replacement.length;
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+      
+      // Update preview
+      const preview = document.querySelector('.markdown-preview');
+      if (preview) {
+        updateMarkdownPreview(textarea, preview);
+      }
+    }
+  </script>
+  {% endblock %}
+</body>
+</html>

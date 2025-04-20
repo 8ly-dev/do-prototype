@@ -1,0 +1,27 @@
+{% extends "task_base.html" %}
+
+{% block task_form %}
+<div class="mb-4">
+  <label for="title" class="form-label">Title</label>
+  <input type="text" id="title" name="title" class="form-input" value="{{ task.title }}" required>
+</div>
+
+<div class="mb-4">
+  <label for="description" class="form-label">Description</label>
+  <textarea id="description" name="description" class="form-input" rows="4">{{ task.description or '' }}</textarea>
+</div>
+
+<div class="mb-4">
+  <label for="due_date" class="form-label">Due Date</label>
+  <input type="date" id="due_date" name="due_date" class="form-input" value="{{ task.due_date or '' }}">
+</div>
+
+<div class="mb-4">
+  <label for="priority" class="form-label">Priority</label>
+  <select id="priority" name="priority" class="form-input">
+    <option value="1" {% if task.priority == 1 %}selected{% endif %}>Low</option>
+    <option value="2" {% if task.priority == 2 %}selected{% endif %}>Medium</option>
+    <option value="3" {% if task.priority == 3 %}selected{% endif %}>High</option>
+  </select>
+</div>
+{% endblock %}

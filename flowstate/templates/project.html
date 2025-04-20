@@ -277,22 +277,40 @@
           {% for task in tasks %}
           <div class="task-card">
             <div>
-              <h3 class="font-medium">{{ task.title }}</h3>
+              <h3 class="font-medium">
+                <a href="/task/{{ task.id }}" class="hover:text-indigo-400 hover:underline">
+                  {{ task.title }}
+                </a>
+              </h3>
               {% if task.description %}
-              <p class="text-gray-400 text-sm mt-1">{{ task.description }}</p>
+              <p class="text-gray-400 text-sm mt-1">
+                {% if task.task_type == "email" or task.task_type == "reminder" or task.task_type == "calendar" %}
+                  <!-- For structured data, show a summary instead of raw JSON -->
+                  <span class="text-gray-500">{{ task.task_type|capitalize }} task</span>
+                {% else %}
+                  {{ task.description }}
+                {% endif %}
+              </p>
               {% endif %}
               {% if task.due_date %}
               <p class="text-gray-500 text-xs mt-1">Due: {{ task.due_date }}</p>
               {% endif %}
             </div>
-            <div class="complete-task-button w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center"
-                 data-task-id="{{ task.id }}"
-                 role="button"
-                 tabindex="0"
-                 aria-label="Complete task">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
+            <div class="flex items-center space-x-2">
+              <a href="/task/{{ task.id }}" class="text-indigo-400 hover:text-indigo-300" title="Edit task">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                </svg>
+              </a>
+              <div class="complete-task-button w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center"
+                   data-task-id="{{ task.id }}"
+                   role="button"
+                   tabindex="0"
+                   aria-label="Complete task">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
             </div>
           </div>
           {% endfor %}
