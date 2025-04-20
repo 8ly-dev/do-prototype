@@ -135,13 +135,14 @@ class TaskAgent(Agent):
     Tone:
     Natural, warm, and focused. Always prioritize clarity and helpfulness."""
     def __init__(self, user_id: int = 0, project: Project | None = None):
+        self.db = get_db()
+        self.user = self.db.get_user_by_id(user_id)
         if project:
             self.system_prompt += (
                 f"\n\nThe user is currently working on the project {project.name}. When a project is needed but not "
                 f"given, use the current project."
             )
 
-        self.user_id = user_id
         self.project_id = project.id if project else None
         super().__init__()
 
@@ -149,11 +150,10 @@ class TaskAgent(Agent):
         """Creates a new project. Please ensure that project names are unique before calling this method. Convert
         names to title case for better user experience. If there's a similar project name, ask the user what they
         want to do."""
-        db = get_db()
         if name in await self.get_project_names():
             return "Project name already exists."
 
-        project_id = db.insert_project(self.user_id, name)
+        project_id = self.db.insert_project(self.user.id, name)
         print(f"DB :: Created project {name} with ID {project_id}.")
         return f"Created project {name}."
 
@@ -162,9 +162,8 @@ class TaskAgent(Agent):
         request. Make sure you have the name correct. Be very careful when deleting projects. You should always
         confirm the user's intent before deleting a project."""
         print(f"DB :: Received delete project request for {project_name}")
-        db = get_db()
         if project := await self._find_project_by_name(project_name):
-            db.delete_project(project.id)
+            self.db.delete_project(project.id)
             print(f"DB :: Deleted project {project_name} with ID {project.id}.")
             return f"Deleted project {project_name}."
 
@@ -177,7 +176,6 @@ class TaskAgent(Agent):
         request. Make sure you have the names correct. Be very careful when deleting tasks. You should always confirm
         the user's intent before deleting a project."""
         print(f"DB :: Received delete task request for {task_title} in {project_name}")
-        db = get_db()
         project = await self._find_project_by_name(project_name)
         if not project:
             return "Project not found."
@@ -186,7 +184,7 @@ class TaskAgent(Agent):
         if not task:
             return "Task not found in this project."
 
-        db.delete_task(task.id)
+        self.db.delete_task(task.id)
         print(f"DB :: Deleted task {task_title} in {project_name} with ID {task.id}.")
         return f"Deleted task {task_title}."
 
@@ -201,7 +199,6 @@ class TaskAgent(Agent):
     ) -> str:
         """Creates a new task. Look up the existing projects and use the name that most closely matches the user's
         request. If the user isn't clear about the project, pick the most relevant project and use that."""
-        db = get_db()
         project_id = None
         if project_name:
             if project := await self._find_project_by_name(project_name):
@@ -211,7 +208,7 @@ class TaskAgent(Agent):
             project_id = self.project_id
 
         if project_id is not None:
-            task_id = db.insert_task(project_id, title, description, due_date, 1, task_type)
+            task_id = self.db.insert_task(project_id, title, description, due_date, 1, task_type)
             print(f"DB :: Created task {title} with ID {task_id}.")
             return f"Created task {title}."
 
@@ -219,27 +216,24 @@ class TaskAgent(Agent):
 
     async def get_project_names(self) -> list[str]:
         """Returns a list of project names for the current user."""
-        db = get_db()
-        projects = db.get_projects_by_user(self.user_id)
-        print(f"DB :: Retrieved {len(projects)} projects for user {self.user_id}.")
+        projects = self.db.get_projects_by_user(self.user.id)
+        print(f"DB :: Retrieved {len(projects)} projects for user {self.user.id}.")
         return [project.name for project in projects]
 
     async def get_task_titles(self, project_name: str) -> list[str] | Literal["Project not found."]:
         """Returns a list of task titles in the requested project. If the project doesn't exist, returns an error
         message."""
-        db = get_db()
         project = await self._find_project_by_name(project_name)
         if not project:
             return "Project not found."
 
-        tasks = db.get_tasks_by_project(project.id)
-        print(f"DB :: Retrieved {len(tasks)} tasks in {project_name} for user {self.user_id}.")
+        tasks = self.db.get_tasks_by_project(project.id)
+        print(f"DB :: Retrieved {len(tasks)} tasks in {project_name} for user {self.user.id}.")
         return [task.title for task in tasks]
 
     async def _find_project_by_name(self, project_name: str) -> Project | None:
         """Helper method to find a project by name. Returns the project if found, or None otherwise."""
-        db = get_db()
-        projects = db.get_projects_by_user(self.user_id)
+        projects = self.db.get_projects_by_user(self.user.id)
         for project in projects:
             if project.name.lower() == project_name.lower():
                 return project
@@ -249,8 +243,7 @@ class TaskAgent(Agent):
 
     async def _find_task_by_name(self, project_id: int, task_title: str) -> Task | None:
         """Helper method to find a task by name. Returns the task if found, or None otherwise."""
-        db = get_db()
-        tasks = db.get_tasks_by_project(project_id)
+        tasks = self.db.get_tasks_by_project(project_id)
         for task in tasks:
             if task.title.lower() == task_title.lower():
                 return task
