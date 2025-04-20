@@ -143,6 +143,7 @@ class TaskAgent(Agent):
     def __init__(self, user_id: int = 0, project: Project | None = None):
         self.db = get_db()
         self.user = self.db.get_user_by_id(user_id)
+        self.system_prompt = f"The current user is {self.user.username}.\n{self.system_prompt}"
         if project:
             self.system_prompt += (
                 f"\n\nThe user is currently working on the project {project.name}. When a project is needed but not "
