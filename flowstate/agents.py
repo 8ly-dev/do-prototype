@@ -97,9 +97,15 @@ class TaskAgent(Agent):
 
     Tone:
     Natural, warm, and focused. Always prioritize clarity and helpfulness."""
-    def __init__(self, user_id: int = 0):
-        super().__init__()
+    def __init__(self, user_id: int = 0, project: Project | None = None):
+        if project:
+            self.system_prompt += (
+                f"\n\nThe user is currently working on the project {project.name}. When a project is needed but not "
+                f"given, use the current project."
+            )
+
         self.user_id = user_id
+        self.project_id = project.id
         super().__init__()
 
     async def create_project(self, name: str) -> str:
@@ -126,13 +132,22 @@ class TaskAgent(Agent):
         else:
             return "Project not found."
 
-    async def create_task(self, project_name: str, title: str, description: str, due_date: str, priority: int, task_type: str) -> str:
+    async def create_task(self, project_name: str = None, title: str = None, description: str = None, due_date: str = None, priority: int = 1, task_type: str = "task") -> str:
         """Creates a new task. Look up the existing projects and use the name that most closely matches the users
         request. If the project name is not found, return an error message. If the user isn't clear about the
-        project, pick the most relevant project and use that."""
+        project, pick the most relevant project and use that. If no project_name is provided but self.project_id is set,
+        use that project."""
         db = get_db()
-        if project := await self._find_project_by_name(project_name):
-            task_id = db.insert_task(project.id, title, description, due_date, priority, task_type)
+        project_id = None
+        if project_name:
+            if project := await self._find_project_by_name(project_name):
+                project_id = project.id
+
+        elif self.project_id:
+            project_id = self.project_id
+
+        if project_id is not None:
+            task_id = db.insert_task(project_id, title, description, due_date, priority, task_type)
             print(f"DB :: Created task {title} with ID {task_id}.")
             return f"Created task {title}."
 
