@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learn More - Flowstate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+    hr {
+      border: none;
+      margin: 2rem 0!important;
+    }
+    .sidebar {
+      background-color: #0a0a0a;
+      width: 250px;
+    }
+    .project-link {
+      color: #a0a0a0;
+      transition: color 0.2s;
+    }
+    .project-link:hover {
+      color: #ffffff;
+    }
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 1rem;
+    }
+    .input-area {
+      background-color: #141414;
+      border-radius: 8px;
+    }
+    .example-snippet {
+      cursor: pointer;
+    }
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .system-message {
+      padding: 0.75rem;
+      margin: 0.75rem auto 0 auto;
+      align-self: flex-start;
+      text-align: left;
+    }
+
+    .system-message + .system-message {
+      border-top: 4px solid;
+      border-image: linear-gradient(90deg, #6366F1, #8B5CF6, #EC4899, #F43F5E, #6366F1) 1;
+      padding-top: 2rem;
+    }
+    /* Markdown styles */
+    .markdown-content h1 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content h2 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-top: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content h3 {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content p {
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content ul, .markdown-content ol {
+      margin-left: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content ul {
+      list-style-type: disc;
+    }
+    .markdown-content ol {
+      list-style-type: decimal;
+    }
+    .markdown-content code {
+      font-family: monospace;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 0.1rem 0.2rem;
+      border-radius: 0.2rem;
+    }
+    .markdown-content pre {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem;
+      border-radius: 0.3rem;
+      overflow-x: auto;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content blockquote {
+      border-left: 3px solid #6366F1;
+      padding-left: 0.5rem;
+      margin-left: 0.5rem;
+      color: #9CA3AF;
+    }
+    .markdown-content a {
+      color: #6366F1;
+      text-decoration: underline;
+    }
+    .markdown-content table {
+      border-collapse: collapse;
+      margin-bottom: 0.5rem;
+    }
+    .markdown-content th, .markdown-content td {
+      border: 1px solid #4B5563;
+      padding: 0.3rem 0.5rem;
+    }
+
+    @keyframes slideUpFadeIn {
+      0% {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      50% {
+        opacity: 0.5;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .message-fade-in {
+      opacity: 0;
+      animation: slideUpFadeIn 720ms linear forwards;
+      animation-delay: 360ms;
+    }
+
+    .loading-indicator {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      z-index: 1000;
+      overflow: hidden;
+    }
+    .loading-bar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #6366F1, #8B5CF6, #EC4899, #F43F5E, #6366F1);
+      background-size: 200% 100%;
+      animation: gradient-move 2s linear infinite;
+    }
+    @keyframes gradient-move {
+      0% {
+        background-position: 0% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="sidebar h-full flex flex-col">
+      <div class="p-6">
+        <h1 class="text-xl font-semibold mb-8">Projects</h1>
+        <nav>
+          <ul class="space-y-4">
+            {% if not projects %}
+            <li class="project-link">You don't have any projects right now</li>
+            {% else %}
+            {% for project in projects %}
+            {% set project_slug = project.name.lower().replace(" ", "-") %}
+            <li><a href="/project/{{ project_slug }}" class="project-link">{{ project.name }}</a></li>
+            {% endfor %}
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      <div class="mt-auto p-6">
+        <a href="/" class="project-link block mb-4">Dashboard</a>
+        <a href="/logout" class="project-link">Logout</a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8 flex flex-col">
+
+      <!-- Chat Area (expanded to fill the space) -->
+      <div class="chat-area flex-1">
+        <div id="chat-messages" class="space-y-4">
+          <!-- Chat messages will be inserted here -->
+        </div>
+        <div id="loading-indicator" class="loading-indicator">
+          <div class="loading-bar"></div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area mt-4">
+        <form id="chat-form" class="flex items-center p-2">
+          <input type="text" 
+                 id="chat-input" 
+                 placeholder="Ask about Flowstate..." 
+                 class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none px-4 py-3"
+                 autocomplete="off">
+          <button type="submit" 
+                  class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center ml-2 hover:bg-indigo-700 transition-colors">
+            <svg class="w-6 h-6 text-white transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const chatForm = document.getElementById('chat-form');
+      const chatInput = document.getElementById('chat-input');
+      const chatMessages = document.getElementById('chat-messages');
+      const loadingIndicator = document.getElementById('loading-indicator');
+
+      // Listen for keydown events on the document to focus the input field
+      document.addEventListener('keydown', function(event) {
+        // Check if the key pressed is a printable character and not a modifier key
+        const isPrintableKey = event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey;
+
+        // If the chat input is not already focused and a printable key is pressed
+        if (document.activeElement !== chatInput && isPrintableKey) {
+          // Focus the input field
+          chatInput.focus();
+
+          // Add the pressed key to the input field
+          chatInput.value += event.key;
+
+          // Prevent default to avoid double input
+          event.preventDefault();
+
+          // Set cursor position to the end of the input
+          const length = chatInput.value.length;
+          chatInput.setSelectionRange(length, length);
+        }
+      });
+
+      // Set random placeholder text for chat input
+      const placeholders = [
+        "What is Flowstate?",
+        "How do I create a project?",
+        "Tell me about task management...",
+        "How can I get started?",
+        "What features does Flowstate have?",
+        "How do I use the chat?",
+        "Can you explain how this works?",
+        "What can you help me with?",
+        "Tell me more about...",
+        "How do I organize my tasks?",
+        "What's the best way to use Flowstate?",
+        "I want to learn about..."
+      ];
+
+      // Function to update placeholder text randomly
+      function updatePlaceholder() {
+        chatInput.placeholder = placeholders[Math.floor(Math.random() * placeholders.length)];
+      }
+
+      // Set initial placeholder
+      updatePlaceholder();
+
+      // Change placeholder every 30 seconds
+      setInterval(updatePlaceholder, 30000);
+
+      // Create WebSocket connection
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const socket = new WebSocket(`${protocol}//${window.location.host}/ws/learn-more`);
+
+      // Connection opened
+      socket.addEventListener('open', function(event) {
+        console.log('Connected to WebSocket server');
+      });
+
+      // Listen for messages
+      socket.addEventListener('message', function(event) {
+        // Hide loading indicator when response is received
+        hideLoadingIndicator();
+
+        const message = event.data;
+        if(message === "!!COMMAND: typing!!")
+          showLoadingIndicator();
+        else
+          addMessage(message, 'system');
+      });
+
+      // Connection closed
+      socket.addEventListener('close', function(event) {
+        console.log('Disconnected from WebSocket server');
+        hideLoadingIndicator();
+        addMessage('Connection closed. Please refresh the page to reconnect.', 'system');
+      });
+
+      // Connection error
+      socket.addEventListener('error', function(event) {
+        console.error('WebSocket error:', event);
+        hideLoadingIndicator();
+        addMessage('Error connecting to server.', 'system');
+      });
+
+      // Send message
+      chatForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const message = chatInput.value.trim();
+
+        if (message) {
+          // Send message to server
+          socket.send(message);
+
+          // Show loading indicator
+          showLoadingIndicator();
+
+          // Clear input
+          chatInput.value = '';
+        }
+      });
+
+      // Add message to chat (without fading out old messages)
+      function addMessage(message, type) {
+        // Create new message element
+        const messageElement = document.createElement('div');
+        messageElement.classList.add(type === 'user' ? 'user-message' : 'system-message');
+        messageElement.classList.add('message-fade-in', 'markdown-content');
+
+        // Convert markdown to HTML using marked.js
+        try {
+          // Configure marked for security (newer versions of marked use different options)
+          marked.setOptions({
+            breaks: true,   // Convert line breaks to <br>
+            gfm: true       // Enable GitHub Flavored Markdown
+          });
+
+          // Parse markdown to HTML
+          const htmlContent = marked.parse(message);
+          messageElement.innerHTML = htmlContent;
+          
+        } catch (error) {
+          console.error('Error parsing markdown:', error);
+          // Fallback to plain text if markdown parsing fails
+          messageElement.innerHTML = `<p>${message}</p>`;
+        }
+
+        // Add new message
+        chatMessages.appendChild(messageElement);
+
+        // Scroll to the bottom of the chat area smoothly
+        messageElement.scrollIntoView({behavior: 'instant', block: 'start'});
+      }
+
+      // Show loading indicator
+      function showLoadingIndicator() {
+        loadingIndicator.style.display = 'block';
+      }
+
+      // Hide loading indicator
+      function hideLoadingIndicator() {
+        loadingIndicator.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
