@@ -59,7 +59,7 @@ class Agent[DT, OT: str]:
 
         super_attrs = dir(Agent)
         for name in dir(cls):
-            if not name.startswith("_") and name not in super_attrs:
+            if not name.startswith("_") and name not in super_attrs and callable(getattr(cls, name)):
                 cls.tools.append(name)
 
         cls.system_prompt = cls.__doc__
