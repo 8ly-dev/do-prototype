@@ -1,4 +1,5 @@
 import asyncio
+import random
 import time
 
 import starlette
@@ -154,14 +155,19 @@ async def chat_websocket(websocket: WebSocket):
 
 
     async def nudge_user():
-        await asyncio.sleep(5 * 60)
+        nonlocal nudge_delay, nudge_task
+        await asyncio.sleep(nudge_delay)
         nudge_message = await agent.send_prompt(
             f"This is the software developer: {user.username} is inactive and hasn't done anything yet. Send a message "
             f"to inspire them to get started."
         )
         await websocket.send_text(nudge_message)
 
+        nudge_delay = random.randint(60, 300)
+        nudge_task = loop.create_task(nudge_user())
+
     loop = asyncio.get_running_loop()
+    nudge_delay = 300
     nudge_task = loop.create_task(nudge_user())
 
     try:
