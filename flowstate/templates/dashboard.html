@@ -200,7 +200,8 @@
             <li class="project-link">You don't have any projects right now</li>
             {% else %}
             {% for project in projects %}
-            <li><a href="#" class="project-link">{{ project.name }}</a></li>
+            {% set project_slug = project.name.lower().replace(" ", "-") %}
+            <li><a href="/project/{{ project_slug }}" class="project-link">{{ project.name }}</a></li>
             {% endfor %}
             {% endif %}
           </ul>
@@ -217,8 +218,15 @@
       <div class="mb-8 flex-1">
         <h2 class="text-xl font-semibold mb-4">Right Now</h2>
         <div class="right-now-card flex justify-between items-center">
-          <p class="text-gray-300">The user's highest priority task goes here</p>
+          {% if top_task %}
+          <div>
+            <h3 class="font-medium">{{ top_task.title }}</h3>
+            {% if top_task.description %}
+            <p class="text-gray-400 text-sm mt-1">{{ top_task.description }}</p>
+            {% endif %}
+          </div>
           <div id="complete-task-btn" 
+               data-task-id="{{ top_task.id }}"
                class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center complete-task-button"
                role="button"
                tabindex="0"
@@ -227,6 +235,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
           </div>
+          {% else %}
+          <p class="text-gray-300">No tasks yet</p>
+          {% endif %}
         </div>
       </div>
 
@@ -367,9 +378,12 @@
 
       // Task completion handler
       completeTaskBtn.addEventListener('click', function() {
+        const taskId = this.getAttribute('data-task-id');
+
         // Send task completion to server
         socket.send(JSON.stringify({
           type: 'complete_task',
+          task_id: taskId,
           timestamp: new Date().toISOString()
         }));
 
@@ -381,6 +395,9 @@
         setTimeout(() => {
           this.classList.remove('bg-green-500');
           this.classList.add('bg-indigo-600');
+
+          // Refresh the page to update the task list
+          window.location.reload();
         }, 1000);
       });
 
