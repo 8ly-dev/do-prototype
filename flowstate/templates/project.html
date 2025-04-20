@@ -242,8 +242,10 @@
 
       <!-- Right Now Section -->
       <div class="mb-8">
+        {% if top_task %}
         <h2 class="text-xl font-semibold mb-4">Right Now</h2>
-        <div class="right-now-card flex justify-between items-center">
+        {% endif %}
+        <div class="{% if top_task %}right-now-card {% endif %}flex justify-between items-center">
           {% if top_task %}
           <div>
             <h3 class="font-medium">{{ top_task.title }}</h3>
@@ -261,8 +263,6 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
           </div>
-          {% else %}
-          <p class="text-gray-300">No tasks yet</p>
           {% endif %}
         </div>
       </div>
