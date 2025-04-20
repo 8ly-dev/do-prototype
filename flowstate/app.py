@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import starlette
 from starlette.applications import Starlette
@@ -128,23 +129,28 @@ async def chat_websocket(websocket: WebSocket):
     await websocket.accept()
     closed = False
 
+    user = db.get_user_by_id(user_id)
     project = db.get_project(project_id) if project_id else None
     agent = TaskAgent(user_id=user_id, project=project)
 
     if not project:
         projects = db.get_projects_by_user(user_id)
         if len(projects) == 0:
+            start = time.time()
             await websocket.send_text("!!COMMAND: typing!!")
-            await asyncio.sleep(1.5)
-            await websocket.send_text(
-                await agent.send_prompt(
-                    "This is the software developer: This user is new, please great them and let them know how they can "
-                    "get started. Use markdown to send a large welcome heading followed by two sentence using normal "
-                    "formatting. Make sure to mention that you use 'natural language' in the input field below. Use "
-                    "emoji. Don't forget that you are a helpful assistant that is an innate extension of the user. "
-                    "Use the first person singular form of your name in your responses."
-                )
+            welcome_message = await agent.send_prompt(
+                f"This is the software developer: {user.username} is new a new user, please great them and let them "
+                f"know how they can get started. Use markdown to send a large welcome heading followed by two sentence "
+                f"using normal formatting (say the user's name somewhere in there). Make sure to mention that you use "
+                f"'natural language' in the input field this is below your message. Use emoji. Don't forget that you "
+                f"are a helpful assistant that is an innate extension of the user. Be sure to remain invisible, only "
+                f"refer to the app Flowstate, not yourself."
             )
+            duration = time.time() - start
+            if duration < 1.5:
+                await asyncio.sleep(1.5 - duration)
+
+            await websocket.send_text(welcome_message)
     try:
         while True:
             data = await websocket.receive_text()
