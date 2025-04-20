@@ -163,6 +163,7 @@ class FlowstateDB:
 
     def delete_project(self, project_id: int):
         c = self.conn.cursor()
+        c.execute('DELETE FROM tasks WHERE project_id = ?', (project_id,))
         c.execute('DELETE FROM projects WHERE id = ?', (project_id,))
         self.conn.commit()
 
