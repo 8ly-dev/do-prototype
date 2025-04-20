@@ -5,6 +5,7 @@ from pydantic_ai.models.groq import GroqModel
 from pydantic_ai.providers.groq import GroqProvider
 from pydantic_ai import Agent as PydanticAgent
 
+from flowstate.db_models import get_db
 from flowstate.secrets import get_secrets
 
 _model = None
@@ -93,5 +94,13 @@ class TaskAgent(Agent):
 
     Tone:
     Natural, warm, and focused. Always prioritize clarity and helpfulness."""
+    def __init__(self, user_id: int = 0):
         super().__init__()
         self.user_id = user_id
+
+    async def create_project(self, name: str) -> str:
+        """Create a new project with a given name."""
+        db = get_db()
+        project_id = db.insert_project(self.user_id, name)
+        print(f"DB :: Created project {name} with ID {project_id}.")
+        return f"Created project {name}."
