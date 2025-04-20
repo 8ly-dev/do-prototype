@@ -115,7 +115,8 @@ class TaskAgent(Agent):
         return f"Created project {name}."
 
     async def delete_project(self, project_name: str) -> str:
-        """Deletes a project. Look up the existing projects and pass the name that most closely matches the users         request to this method. If the project name is not found, return an error message."""
+        """Deletes a project. Look up the existing projects and use the name that most closely matches the user's
+        request. If the project name is not found, return an error message."""
         db = get_db()
         if project := await self._find_project_by_name(project_name):
             db.delete_project(project.id)
