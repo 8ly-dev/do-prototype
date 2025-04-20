@@ -143,7 +143,6 @@ async def chat_websocket(websocket: WebSocket):
                     if task_id:
                         # Delete the task
                         db.delete_task(int(task_id))
-                        await websocket.send_text(f"Task completed successfully.")
                         continue
 
             # Normal message processing
