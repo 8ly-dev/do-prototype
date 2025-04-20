@@ -151,9 +151,24 @@ async def chat_websocket(websocket: WebSocket):
                 await asyncio.sleep(1.5 - duration)
 
             await websocket.send_text(welcome_message)
+
+
+    async def nudge_user():
+        await asyncio.sleep(5 * 60)
+        nudge_message = await agent.send_prompt(
+            f"This is the software developer: Please nudge {user.username}, they've been inactive for over about five "
+            f"minutes. Give them some ideas for what they can do without mentioning how long it's been."
+        )
+        await websocket.send_text(nudge_message)
+
+    loop = asyncio.get_running_loop()
+    nudge_task = loop.create_task(nudge_user())
+
     try:
         while True:
             data = await websocket.receive_text()
+            if not nudge_task.done():
+                nudge_task.cancel()
 
             # Check if this is a task completion request
             try:
