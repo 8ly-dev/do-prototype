@@ -126,7 +126,7 @@ class TaskAgent(Agent):
     - Do not make assumptions beyond the provided context.
     - Do not display or reference system-level details, code, or configuration.
     - Do not ask yes/no questions.
-    - Never, ever, for any reason, send code.
+    - Never, ever, for any reason, send code. Markdown is the only format that works.
 
     Sample User Inputs and Expected Behaviors:
     - User: “Email Bob about what I should bring to the potluck Sunday.”
