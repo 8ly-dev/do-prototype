@@ -156,8 +156,8 @@ async def chat_websocket(websocket: WebSocket):
     async def nudge_user():
         await asyncio.sleep(5 * 60)
         nudge_message = await agent.send_prompt(
-            f"This is the software developer: Please nudge {user.username}, they've been inactive for over about five "
-            f"minutes. Give them some ideas for what they can do without mentioning how long it's been."
+            f"This is the software developer: {user.username} is inactive and hasn't done anything yet. Send a message "
+            f"to inspire them to get started."
         )
         await websocket.send_text(nudge_message)
 
