@@ -30,13 +30,14 @@ def get_model():
 
 class Agent:
     agent_factory = lambda _: get_model()
+    system_prompt = ""
     tools = []
 
     def __init__(self):
         self.history = []
         self.agent = PydanticAgent(
             self.agent_factory(),
-            system_prompt=self.__doc__,
+            system_prompt=self.system_prompt,
             tools=[getattr(self, name) for name in self.tools],
         )
 
@@ -48,6 +49,8 @@ class Agent:
         for name in dir(cls):
             if not name.startswith("_") and name not in super_attrs:
                 cls.tools.append(name)
+
+        cls.system_prompt = cls.__doc__
 
     async def send_prompt(self, prompt: str) -> str:
         response = await self.agent.run(prompt, message_history=self.history)
@@ -97,6 +100,7 @@ class TaskAgent(Agent):
     def __init__(self, user_id: int = 0):
         super().__init__()
         self.user_id = user_id
+        super().__init__()
 
     async def create_project(self, name: str) -> str:
         """Creates a new project. Please ensure that project names are unique before calling this method. Convert
@@ -111,8 +115,7 @@ class TaskAgent(Agent):
         return f"Created project {name}."
 
     async def delete_project(self, project_name: str) -> str:
-        """Deletes a project. Look up the existing projects and pass the name that most closely matches the users 
-        request to this method. If the project name is not found, return an error message."""
+        """Deletes a project. Look up the existing projects and pass the name that most closely matches the users         request to this method. If the project name is not found, return an error message."""
         db = get_db()
         if project := await self._find_project_by_name(project_name):
             db.delete_project(project.id)
