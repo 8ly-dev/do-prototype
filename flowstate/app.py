@@ -6,6 +6,7 @@ from starlette.requests import Request
 from starlette.websockets import WebSocket, WebSocketState
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
+import json
 
 from flowstate.agents import TaskAgent
 from flowstate.auth import verify_access_token, verify_login_token, generate_access_token, send_auth_email
@@ -133,7 +134,7 @@ async def chat_websocket(websocket: WebSocket):
 
             # Check if this is a task completion request
             try:
-                json_data = eval(data)
+                json_data = json.loads(data)
                 if isinstance(json_data, dict) and json_data.get('type') == 'complete_task':
                     task_id = json_data.get('task_id')
                     if task_id:
