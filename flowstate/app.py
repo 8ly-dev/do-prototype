@@ -2,7 +2,7 @@ from starlette.applications import Starlette
 from starlette.responses import HTMLResponse, RedirectResponse
 from starlette.routing import Route, WebSocketRoute
 from starlette.requests import Request
-from starlette.websockets import WebSocket
+from starlette.websockets import WebSocket, WebSocketState
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
@@ -73,6 +73,13 @@ async def logout(request: Request):
 
 
 async def chat_websocket(websocket: WebSocket):
+    session_token = websocket.cookies.get("SESSION_TOKEN")
+    user_id = verify_access_token(session_token) if session_token else None
+
+    if not user_id:
+        await websocket.close(code=4001)
+        return
+
     await websocket.accept()
     agent = ManagingAgent()
     try:
