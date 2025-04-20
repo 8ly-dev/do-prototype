@@ -118,16 +118,20 @@ async def project_view(request: Request):
 
 
 async def chat_websocket(websocket: WebSocket):
+    db = get_db()
+
     session_token = websocket.cookies.get("SESSION_TOKEN")
     user_id = verify_access_token(session_token) if session_token else None
+    project_id = websocket.path_params.get("project_id")
 
     if not user_id:
         await websocket.close(code=4001)
         return
 
     await websocket.accept()
-    agent = TaskAgent(user_id=user_id)
-    db = get_db()
+
+    project = db.get_project(project_id)
+    agent = TaskAgent(user_id=user_id, project=project)
     try:
         while True:
             data = await websocket.receive_text()
@@ -185,7 +189,7 @@ app = Starlette(
         Route("/login", login_post, methods=["POST"]),
         Route("/logout", logout),
         Route("/project/{project_slug}", project_view),
-        WebSocketRoute("/ws", chat_websocket),
+        WebSocketRoute("/ws/{project_id:int}", chat_websocket),
     ],
     exception_handlers={
         404: not_found,
