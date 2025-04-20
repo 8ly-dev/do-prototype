@@ -84,7 +84,8 @@ async def chat_websocket(websocket: WebSocket):
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:
-        await websocket.close()
+        if websocket.state != WebSocketState.DISCONNECTED:
+            await websocket.close()
 
 
 app = Starlette(
