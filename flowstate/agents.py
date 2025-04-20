@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal, Type
 
 from pydantic_ai.models.groq import GroqModel
@@ -279,3 +280,23 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
 
         else:
             return None
+
+
+class LearnMoreAgent(Agent):
+    """You don't have a name, you are the invisible representative of our company 8ly and our first app Flowstate.
+    Your purpose is to communicate the goals and values of 8ly and the value of Flowstate to investors and potential
+    co-founders."""
+    def __init__(self):
+        root = Path(__file__).parent.parent
+        readme_path = root / "README.md"
+        about_path = root / "about-8ly.md"
+        with readme_path.open("r") as f:
+            self.readme = f.read()
+
+        with about_path.open("r") as f:
+            self.system_prompt = (
+                f"{self.system_prompt}\n\nHere is a document about 8ly and Flowstate to help you answer any "
+                f"questions that you may be asked.\n\n{self.readme}\n\n{f.read()}"
+            )
+
+        super().__init__()
