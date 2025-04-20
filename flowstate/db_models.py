@@ -30,7 +30,7 @@ def get_db(db_path="flowstate.db") -> 'FlowstateDB':
 @dataclass
 class User:
     id: Optional[int]
-    email: str
+    username: str
     created_at: str
 
 @dataclass
@@ -64,7 +64,7 @@ class FlowstateDB:
         c.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE NOT NULL,
+                username TEXT UNIQUE NOT NULL,
                 created_at TEXT NOT NULL
             )
         ''')
@@ -94,16 +94,16 @@ class FlowstateDB:
 
     # --- User Methods ---
 
-    def insert_user(self, email: str) -> int:
+    def insert_user(self, username: str) -> int:
         now = datetime.utcnow().isoformat()
         c = self.conn.cursor()
-        c.execute('INSERT INTO users (email, created_at) VALUES (?, ?)', (email, now))
+        c.execute('INSERT INTO users (username, created_at) VALUES (?, ?)', (username, now))
         self.conn.commit()
         return c.lastrowid
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
+    def get_user_by_username(self, username: str) -> Optional[User]:
         c = self.conn.cursor()
-        c.execute('SELECT * FROM users WHERE email = ?', (email,))
+        c.execute('SELECT * FROM users WHERE username = ?', (username,))
         row = c.fetchone()
         if row:
             return User(**row)

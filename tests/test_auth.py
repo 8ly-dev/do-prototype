@@ -3,8 +3,6 @@ import base64
 import hmac
 from datetime import datetime, UTC
 from flowstate.auth import (
-    generate_login_token,
-    verify_login_token,
     generate_access_token,
     verify_access_token,
 )
@@ -17,41 +15,8 @@ def secret_key():
 
 
 @pytest.fixture
-def sample_email():
-    return "user@example.com"
-
-
-@pytest.fixture
 def sample_user_id():
     return 42
-
-
-class TestLoginTokenFlow:
-    def test_generate_and_verify_valid_token(self, sample_email):
-        token = generate_login_token(sample_email)
-        verified_email = verify_login_token(token)
-        assert verified_email == sample_email
-
-    def test_tampered_token_fails(self, sample_email):
-        token = generate_login_token(sample_email)
-        # Tamper with the token
-        tampered = token[:-2] + "=="
-        assert verify_login_token(tampered) is None
-
-    def test_wrong_secret_fails(self, sample_email):
-        token = generate_login_token(sample_email)
-        flowstate.auth.SECRET_KEY = b"wrong-secret"
-        assert verify_login_token(token) is None
-
-    @pytest.mark.parametrize(
-        "bad_input", [
-            "",
-            "not-base64",
-            base64.urlsafe_b64encode(b"tooshort").decode()
-        ]
-        )
-    def test_invalid_tokens(self, bad_input):
-        assert verify_login_token(bad_input) is None
 
 
 class TestAccessTokenFlow:
@@ -92,17 +57,12 @@ class TestAccessTokenFlow:
 
 
 class TestSecurityRequirements:
-    def test_token_uniqueness(self, secret_key):
-        token1 = generate_login_token("user1@test.com")
-        token2 = generate_login_token("user2@test.com")
-        assert token1 != token2
-
     def test_access_token_time_binding(self, sample_user_id):
         token1 = generate_access_token(sample_user_id)
         token2 = generate_access_token(sample_user_id)
         assert token1 != token2  # Different timestamps
 
-    def test_signature_verification_strict(self, sample_email):
-        token = generate_login_token(sample_email)
-        flowstate.auth.SECRET_KEY += b"x"
-        assert verify_login_token(token) is None
+    def test_access_token_uniqueness(self, secret_key):
+        token1 = generate_access_token(1)
+        token2 = generate_access_token(2)
+        assert token1 != token2  # Different user IDs

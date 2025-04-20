@@ -15,16 +15,16 @@ def temp_db():
 
 def test_user_crud(temp_db):
     db = temp_db
-    email = "testuser@example.com"
-    user_id = db.insert_user(email)
+    username = "testuser"
+    user_id = db.insert_user(username)
     assert isinstance(user_id, int)
-    user = db.get_user_by_email(email)
+    user = db.get_user_by_username(username)
     assert user is not None
-    assert user.email == email
+    assert user.username == username
 
 def test_project_crud(temp_db):
     db = temp_db
-    user_id = db.insert_user("projuser@example.com")
+    user_id = db.insert_user("projuser")
     project_id = db.insert_project(user_id, "Test Project")
     assert isinstance(project_id, int)
     projects = db.get_projects_by_user(user_id)
@@ -32,7 +32,7 @@ def test_project_crud(temp_db):
 
 def test_task_crud(temp_db):
     db = temp_db
-    user_id = db.insert_user("taskuser@example.com")
+    user_id = db.insert_user("taskuser")
     project_id = db.insert_project(user_id, "Task Project")
     task_id = db.insert_task(
         project_id,
@@ -48,7 +48,7 @@ def test_task_crud(temp_db):
 
 def test_update_and_delete(temp_db):
     db = temp_db
-    user_id = db.insert_user("updateuser@example.com")
+    user_id = db.insert_user("updateuser")
     project_id = db.insert_project(user_id, "Update Project")
     task_id = db.insert_task(
         project_id, "Update Task", None, None, 2, "generic"

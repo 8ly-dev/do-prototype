@@ -10,7 +10,7 @@ from pathlib import Path
 import json
 
 from flowstate.agents import TaskAgent
-from flowstate.auth import verify_access_token, verify_login_token, generate_access_token, send_auth_email
+from flowstate.auth import verify_access_token, generate_access_token
 from flowstate.db_models import get_db
 from flowstate.task_views import task_view, task_update
 
@@ -36,37 +36,30 @@ async def homepage(request: Request):
 
 
 async def login_get(request: Request):
-    token = request.query_params.get("t")
-    if token:
-        email = verify_login_token(token)
-        if email:
-            db = get_db()
-            user = db.get_user_by_email(email)
-
-            if user:
-                # User exists, use their ID
-                user_id = user.id
-            else:
-                # User doesn't exist, create a new user
-                user_id = db.insert_user(email)
-
-            response = RedirectResponse(url="/", status_code=302)
-            response.set_cookie("SESSION_TOKEN", generate_access_token(user_id))
-            return response
-
+    # Simply redirect to the home page
     return RedirectResponse(url="/", status_code=302)
 
 
 async def login_post(request: Request):
     form_data = await request.form()
-    email = form_data.get("email")
+    username = form_data.get("username")
 
-    if email:
-        send_auth_email(email)
-        template = templates.get_template("email_sent.html")
-        return HTMLResponse(template.render(email=email))
+    if username:
+        db = get_db()
+        user = db.get_user_by_username(username)
 
-    # If no email provided, redirect back to login page
+        if user:
+            # User exists, use their ID
+            user_id = user.id
+        else:
+            # User doesn't exist, create a new user
+            user_id = db.insert_user(username)
+
+        response = RedirectResponse(url="/", status_code=302)
+        response.set_cookie("SESSION_TOKEN", generate_access_token(user_id))
+        return response
+
+    # If no username provided, redirect back to login page
     return RedirectResponse(url="/", status_code=302)
 
 
