@@ -342,7 +342,10 @@
         hideLoadingIndicator();
 
         const message = event.data;
-        addMessage(message, 'system');
+        if(message === "!!COMMAND: typing!!")
+          showLoadingIndicator();
+        else
+          addMessage(message, 'system');
       });
 
       // Connection closed
