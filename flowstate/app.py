@@ -95,6 +95,26 @@ async def chat_websocket(websocket: WebSocket):
             await websocket.close()
 
 
+async def http_exception(request: Request, exc: HTTPException):
+    """
+    Handle HTTP exceptions with custom templates.
+    """
+    if exc.status_code == 404:
+        template = templates.get_template("404.html")
+        return HTMLResponse(template.render(), status_code=404)
+
+    # For other HTTP exceptions, return the default response
+    return HTMLResponse(f"<h1>{exc.status_code} Error</h1><p>{exc.detail}</p>", status_code=exc.status_code)
+
+
+async def not_found(request: Request, exc: Exception):
+    """
+    Handle 404 errors when a route is not found.
+    """
+    template = templates.get_template("404.html")
+    return HTMLResponse(template.render(), status_code=404)
+
+
 app = Starlette(
     debug=True,
     routes=[
@@ -103,5 +123,9 @@ app = Starlette(
         Route("/login", login_post, methods=["POST"]),
         Route("/logout", logout),
         WebSocketRoute("/ws", chat_websocket),
-    ]
+    ],
+    exception_handlers={
+        404: not_found,
+        HTTPException: http_exception,
+    }
 )
