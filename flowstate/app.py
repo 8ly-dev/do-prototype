@@ -204,8 +204,12 @@ async def learn_more_chat_websocket(websocket: WebSocket):
     print("CONNECTING")
     await websocket.accept()
     closed = False
+    db = get_db()
+    session_token = websocket.cookies.get("SESSION_TOKEN")
+    user_id = verify_access_token(session_token) if session_token else None
+    user = db.get_user_by_id(user_id) if user_id else None
 
-    agent = LearnMoreAgent()
+    agent = LearnMoreAgent(user)
     await websocket.send_text("!!COMMAND: typing!!")
     await asyncio.sleep(1)
     await websocket.send_text(agent.readme)
