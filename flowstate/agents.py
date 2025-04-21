@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal, Type
 
@@ -49,8 +50,8 @@ class Agent[DT, OT: str]:
 
         self.agent = PydanticAgent(
             self.agent_factory(),
-            system_prompt=self.system_prompt,
-            tools=[getattr(self, name) for name in self.tools],
+            system_prompt="Always format dates in a nice human format.\n" + self.system_prompt,
+            tools=[self.__current_date] + [getattr(self, name) for name in self.tools],
             **kwargs,
         )
 
@@ -70,6 +71,9 @@ class Agent[DT, OT: str]:
         self.history.extend(response.new_messages())
         return response.output
 
+    async def __current_date(self) -> str:
+        """Helper method to get the current date UTC in the format YYYY-MM-DD."""
+        return datetime.now(UTC).strftime("%Y-%m-%d")
 
 class EmailHelperSuggestions(PydanticModel):
     subject: str = PydanticField(description="An appropriate email subject that is clear, concise, and relevant.")
