@@ -29,11 +29,19 @@
     .chat-area {
       flex: 1;
       overflow-y: auto;
-      padding-bottom: 1rem;
+      padding-bottom: 5rem; /* Increased padding to account for fixed input area */
     }
     .input-area {
       background-color: #141414;
       border-radius: 8px;
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      width: 100%;
+      max-width: 48rem;
+      padding: 0.5rem;
     }
     .example-snippet {
       cursor: pointer;
@@ -168,35 +176,18 @@
   </style>
 </head>
 <body>
-  <div class="flex h-screen">
-    <!-- Sidebar -->
-    <div class="sidebar h-full flex flex-col">
-      <div class="p-6">
-        <h1 class="text-xl font-semibold mb-8">Projects</h1>
-        <nav>
-          <ul class="space-y-4">
-            {% if not projects %}
-            <li class="project-link">You don't have any projects right now</li>
-            {% else %}
-            {% for project in projects %}
-            {% set project_slug = project.name.lower().replace(" ", "-") %}
-            <li><a href="/project/{{ project_slug }}" class="project-link">{{ project.name }}</a></li>
-            {% endfor %}
-            {% endif %}
-          </ul>
-        </nav>
-      </div>
-      <div class="mt-auto p-6">
-        <a href="/" class="project-link block mb-4">Dashboard</a>
-        <a href="/logout" class="project-link">Logout</a>
+  <div class="flex flex-col h-screen">
+    <!-- Header Bar -->
+    <div class="w-full p-4 fixed top-0 left-0 z-20 bg-[#1a1a1a]">
+      <div class="max-w-3xl mx-auto">
+        <a href="/" class="text-white hover:text-indigo-300 transition-colors text-xl font-semibold">Flowstate by 8ly</a>
       </div>
     </div>
 
     <!-- Main Content -->
-    <div class="flex-1 p-8 flex flex-col">
-
-      <!-- Chat Area (expanded to fill the space) -->
-      <div class="chat-area flex-1">
+    <div class="flex-1 flex flex-col items-center px-4 md:px-8 pt-20">
+    <!-- Chat Area (centered on the page) -->
+      <div class="chat-area flex-1 w-full max-w-3xl">
         <div id="chat-messages" class="space-y-4">
           <!-- Chat messages will be inserted here -->
         </div>
@@ -206,7 +197,7 @@
       </div>
 
       <!-- Input Area -->
-      <div class="input-area mt-4">
+      <div class="input-area w-full max-w-3xl mb-4">
         <form id="chat-form" class="flex items-center p-2">
           <input type="text" 
                  id="chat-input" 
@@ -350,7 +341,7 @@
           // Parse markdown to HTML
           const htmlContent = marked.parse(message);
           messageElement.innerHTML = htmlContent;
-          
+
         } catch (error) {
           console.error('Error parsing markdown:', error);
           // Fallback to plain text if markdown parsing fails
@@ -360,8 +351,13 @@
         // Add new message
         chatMessages.appendChild(messageElement);
 
-        // Scroll to the bottom of the chat area smoothly
-        messageElement.scrollIntoView({behavior: 'instant', block: 'start'});
+        // Scroll to the bottom of the chat area smoothly, accounting for header height
+        const headerHeight = 64; // 4rem (16px * 4)
+        const scrollPosition = messageElement.offsetTop - headerHeight;
+        window.scrollTo({
+          top: scrollPosition,
+          behavior: 'instant'
+        });
       }
 
       // Show loading indicator
