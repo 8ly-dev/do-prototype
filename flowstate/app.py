@@ -1,5 +1,6 @@
 import asyncio
 import random
+import re
 import time
 
 import starlette
@@ -217,6 +218,7 @@ async def learn_more_chat_websocket(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             response = await agent.send_prompt(data)
+            response = re.sub(r'([^\s])8ly', r'\g<0> 8ly', response)
             await websocket.send_text(response)
     except starlette.websockets.WebSocketDisconnect:
         closed = True
