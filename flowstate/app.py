@@ -251,17 +251,7 @@ async def learn_more(request: Request):
     """
     Handle the Learn More page.
     """
-    token = request.cookies.get("SESSION_TOKEN")
-    if token:
-        user_id = verify_access_token(token)
-        if user_id:
-            db = get_db()
-            projects = db.get_projects_by_user(user_id)
-
-            template = templates.get_template("learn_more.html")
-            return HTMLResponse(template.render(projects=projects))
-
-    template = templates.get_template("login.html")
+    template = templates.get_template("learn_more.html")
     return HTMLResponse(template.render())
 
 
