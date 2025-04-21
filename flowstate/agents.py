@@ -8,7 +8,7 @@ from pydantic_ai.providers.groq import GroqProvider
 from pydantic_ai import Agent as PydanticAgent
 from pydantic import BaseModel as PydanticModel, Field as PydanticField
 
-from flowstate.db_models import get_db, Project, Task, TaskType
+from flowstate.db_models import get_db, Project, Task, TaskType, User
 from flowstate.secrets import get_secrets
 
 _model = None
@@ -94,6 +94,10 @@ class EmailAgent(Agent):
     Tone:
     Professional, clear, and appropriate for business communication."""
     output_type = EmailHelperSuggestions
+
+    def __init__(self, user: User):
+        self.system_prompt = f"The current user is {user.username}.\n{self.system_prompt}"
+        super().__init__()
 
 
 class TaskAgent[DT, OT](Agent[DT, OT]):
