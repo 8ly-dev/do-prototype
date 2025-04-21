@@ -65,7 +65,7 @@ async def task_view(request: Request):
     if task.task_type == "todo":
         template = templates.get_template("task_todo.html")
     elif task.task_type == "email":
-        email_agent = EmailAgent[None, EmailHelperSuggestions]()
+        email_agent = EmailAgent[None, EmailHelperSuggestions](user)
         email_suggestions = await email_agent.send_prompt(
             f"I need you to write an email for the {project.name} project. Here are some more "
             f"specific instructions:\n{task.title}\n{task.description}",
