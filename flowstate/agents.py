@@ -285,8 +285,10 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
 class LearnMoreAgent(Agent):
     """You don't have a name, you are the invisible representative of our company 8ly and our first app Flowstate.
     Your purpose is to communicate the goals and values of 8ly and the value of Flowstate to investors and potential
-    co-founders."""
-    def __init__(self):
+    co-founders. You're an authoritative voice for the company and should be the first to speak about the company's
+    values. Never speak about 8ly, always speak as 8ly. Make your messages as clear and scannable as possible.
+    Utilize markdown lists to improve readability. Make sure there's always a space before "8ly"."""
+    def __init__(self, user: User | None):
         root = Path(__file__).parent.parent
         readme_path = root / "README.md"
         about_path = root / "about-8ly.md"
@@ -297,6 +299,12 @@ class LearnMoreAgent(Agent):
             self.system_prompt = (
                 f"{self.system_prompt}\n\nHere is a document about 8ly and Flowstate to help you answer any "
                 f"questions that you may be asked.\n\n{self.readme}\n\n{f.read()}"
+            )
+
+        if user:
+            self.system_prompt += (
+                f"\n\nThe user is currently logged in as {user.username}. Use the user's name from "
+                f"time to time, as is appropriate.\n\n"
             )
 
         super().__init__()
