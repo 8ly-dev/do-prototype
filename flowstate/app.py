@@ -3,6 +3,7 @@ import random
 import re
 import time
 
+import pydantic_ai
 import starlette
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
@@ -14,7 +15,7 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 import json
 
-from flowstate.agents import LearnMoreAgent, TaskAgent
+from flowstate.agents import LearnMoreAgent, LearnMoreSuggestedActionsAgent, TaskAgent
 from flowstate.auth import verify_access_token, generate_access_token
 from flowstate.db_models import get_db
 from flowstate.task_views import task_view, task_update
@@ -211,15 +212,75 @@ async def learn_more_chat_websocket(websocket: WebSocket):
     user = db.get_user_by_id(user_id) if user_id else None
 
     agent = LearnMoreAgent(user)
-    await websocket.send_text("!!COMMAND: typing!!")
+    await websocket.send_text(
+        json.dumps(
+            {
+                "type": "command",
+                "command": "typing",
+            }
+        )
+    )
     await asyncio.sleep(1)
-    await websocket.send_text(agent.readme)
+    await websocket.send_text(
+        json.dumps(
+            {
+                "type": "reply",
+                "reply": agent.readme,
+            }
+        )
+    )
+    await websocket.send_text(
+        json.dumps(
+            {
+                "type": "actions",
+                "actions": await LearnMoreSuggestedActionsAgent(context=agent.readme).send_prompt(),
+            }
+        )
+    )
     try:
         while True:
             data = await websocket.receive_text()
-            response = await agent.send_prompt(data)
-            response = re.sub(r'([^\s])(8ly)', r'\g<1> \g<2>', response)
-            await websocket.send_text(response)
+            try:
+                response = await agent.send_prompt(data)
+            except pydantic_ai.exceptions.ModelHTTPError:
+                await websocket.send_text(
+                    json.dumps(
+                        {
+                            "type": "reply",
+                            "reply": "I'm sorry, something went wrong. Please try again in a moment.",
+                        }
+                    )
+                )
+                await websocket.send_text(
+                    json.dumps(
+                        {
+                            "type": "command",
+                            "command": "reload",
+                        }
+                    )
+                )
+            else:
+                response = clean_response(response)
+                await websocket.send_text(
+                    json.dumps(
+                        {
+                            "type": "reply",
+                            "reply": response,
+                        }
+                    )
+                )
+                actions_agent = LearnMoreSuggestedActionsAgent(agent.history)
+                suggested_actions = await actions_agent.send_prompt(response)
+                if suggested_actions:
+                    await websocket.send_text(
+                        json.dumps(
+                            {
+                                "type": "actions",
+                                "actions": suggested_actions,
+                            }
+                        )
+                    )
+
     except starlette.websockets.WebSocketDisconnect:
         closed = True
     finally:
@@ -275,3 +336,7 @@ app = Starlette(
         HTTPException: http_exception,
     }
 )
+
+
+def clean_response(response: str) -> str:
+    return re.sub(r'([^\s])(8ly)', r'\g<1> \g<2>', response)

@@ -66,8 +66,15 @@ class Agent[DT, OT: str]:
 
         cls.system_prompt = cls.__doc__
 
-    async def send_prompt(self, prompt: str, *, deps: DT | None = None) -> OT:
-        response = await self.agent.run(prompt, message_history=self.history, deps=deps)
+    async def send_prompt(self, prompt: str, *, deps: DT | None = None, output_type: Type[OT] | None = None) -> OT:
+        kwargs = {}
+        if deps:
+            kwargs["deps"] = deps
+
+        if output_type:
+            kwargs["output_type"] = output_type
+
+        response = await self.agent.run(prompt, message_history=self.history, **kwargs)
         self.history.extend(response.new_messages())
         return response.output
 
@@ -323,3 +330,20 @@ class LearnMoreAgent(Agent):
             )
 
         super().__init__()
+
+
+class LearnMoreSuggestedActionsAgent(Agent):
+    """You are the user and ask questions on their behalf. The user is a potential co-founder and needs to understand
+    the viability and potential of 8ly and Flowstate."""
+    def __init__(self, history: list | None = None, *, context: str | None = None):
+        if context:
+            self.system_prompt += f"\n\n{context}"
+
+        super().__init__()
+        self.history = history or []
+
+    def send_prompt(self, *args, **kwargs):
+        return super().send_prompt(
+            "Based on the previous conversation, what are three, very short, questions the user has now?",
+            output_type=list[str],
+        )
