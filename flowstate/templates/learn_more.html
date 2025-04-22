@@ -334,6 +334,9 @@
                 case 'actions':
                     addActions(data.actions);
                     break;
+                case 'using':
+                    console.log("Using " + data.tool_message)
+                    break
                 default:
                     console.log(data);
                     throw new Error(`Unknown message type: ${data}`);

@@ -211,7 +211,7 @@ async def learn_more_chat_websocket(websocket: WebSocket):
     user_id = verify_access_token(session_token) if session_token else None
     user = db.get_user_by_id(user_id) if user_id else None
 
-    agent = LearnMoreAgent(user)
+    agent = LearnMoreAgent(user, websocket)
     await websocket.send_text(
         json.dumps(
             {
@@ -259,6 +259,7 @@ async def learn_more_chat_websocket(websocket: WebSocket):
                         }
                     )
                 )
+                raise
             else:
                 response = clean_response(response)
                 await websocket.send_text(
@@ -269,7 +270,7 @@ async def learn_more_chat_websocket(websocket: WebSocket):
                         }
                     )
                 )
-                actions_agent = LearnMoreSuggestedActionsAgent(agent.history)
+                actions_agent = LearnMoreSuggestedActionsAgent(agent.history[:5])
                 suggested_actions = await actions_agent.send_prompt(response)
                 if suggested_actions:
                     await websocket.send_text(

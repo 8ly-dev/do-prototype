@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from itertools import chain
 from pathlib import Path
 from typing import Literal, Type
 
@@ -8,6 +9,7 @@ from pydantic_ai.models.groq import GroqModel
 from pydantic_ai.providers.groq import GroqProvider
 from pydantic_ai import Agent as PydanticAgent
 from pydantic import BaseModel as PydanticModel, Field as PydanticField
+from starlette.websockets import WebSocket
 
 from flowstate.db_models import get_db, Project, Task, TaskType, User
 from flowstate.secrets import get_secrets
@@ -304,24 +306,23 @@ class LearnMoreAgent(Agent):
     values. Never speak about 8ly, always speak as 8ly. Make your messages as clear and scannable as possible.
     Utilize markdown lists to improve readability.
 
+    Look up all relevant documents to help you answer any questions the user may have. There are readme, about, and FAQ
+    files available in the project. If the user asks technical questions about how the Flowstate prototype functions,
+    you can look through the relevant code files.
+
+    When discussing the prototype's code, focus on the technologies and the patterns used.
+
     Guidelines:
     - Never refer to yourself as an AI, agent, or assistant.
     - Don't talk about Flowstate as an app, use the name Flowstate instead.
     - Respond and act in a way that feels intuitive, supportive, and innately human.
     - When the user goes off-topic, redirect them back to discuss Flowstate and 8ly.
     - Don't overuse the user's name, it's ok occasionally."""
-    def __init__(self, user: User | None):
+    def __init__(self, user: User | None, chat: WebSocket):
         root = Path(__file__).parent.parent
         readme_path = root / "README.md"
-        about_path = root / "about-8ly.md"
         with readme_path.open("r") as f:
             self.readme = f.read()
-
-        with about_path.open("r") as f:
-            self.system_prompt = (
-                f"{self.system_prompt}\n\nHere is a document about 8ly and Flowstate to help you answer any "
-                f"questions that you may be asked.\n\n{self.readme}\n\n{f.read()}"
-            )
 
         if user:
             self.system_prompt += (
@@ -329,7 +330,53 @@ class LearnMoreAgent(Agent):
                 f"time to time, as is appropriate.\n\n"
             )
 
+        self._chat = chat
+        self._file_cache = {}
+        self._path_cache = []
         super().__init__()
+
+    async def list_files(self) -> list[str]:
+        """List all files available in the project."""
+        await self._chat.send_json({"type": "using", "tool_message": "Listing files"})
+        files = self._find_files()
+        print("LISTING FILES", files)
+        return files
+
+    async def read_file(self, file_path: str):
+        """Read the contents of a file. Make sure file paths are exact fully qualified path to the file. Returns access
+        denied error if the file doesn't exist."""
+        print(f"READING: {file_path}")
+        await self._chat.send_json({"type": "using", "tool_message": f"Reading {file_path.split('/')[-1]}"})
+        if file_path in self._file_cache:
+            return self._file_cache[file_path]
+
+        if file_path not in self._find_files():
+            print("- Access denied: File not found.")
+            return f"Access denied: File {file_path} not found."
+
+        with open(file_path, "r") as f:
+            file = f.read()
+
+        self._file_cache[file_path] = file
+        print(f"- '{file[:20]}...")
+        return file
+
+    def _find_files(self, path: Path | None = None) -> list[str]:
+        if not path and self._path_cache:
+            return self._path_cache
+
+        _path = path or Path(__file__).parent.parent
+        if _path.name.startswith("."):
+            return []
+
+        if _path.is_file():
+            return [str(_path).lower()]
+
+        files = list(chain(*(self._find_files(child) for child in _path.iterdir())))
+        if not path:
+            self._path_cache = files
+
+        return files
 
 
 class LearnMoreSuggestedActionsAgent(Agent):
