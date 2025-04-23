@@ -31,9 +31,11 @@
             overflow-y: auto;
             padding-bottom: 5rem; /* Increased padding to account for fixed input area */
         }
-        .input-area {
+        #chat-form {
             background-color: #141414;
             border-radius: 8px;
+        }
+        .input-area {
             position: fixed;
             bottom: 0;
             left: 50%;
@@ -159,35 +161,52 @@
             }
         }
 
+        @keyframes toolSlideUpFadeOut {
+            0% {
+                opacity: 1;
+                transform: translateY(100%);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
         .tool-message-fade-out {
-            animation: slideUpFadeOut 500ms ease-out forwards;
+            animation: toolSlideUpFadeOut 500ms ease-out forwards;
+        }
+
+        .tool-message-fade-in {
+            animation-delay: 250ms;
+            animation: fadeIn 500ms ease-in forwards;
         }
 
         #tool-messages-container {
-            position: fixed;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
+            position: relative;
+            top: -100%;
+            left: 0;
             z-index: 9;
-            width: 100%;
-            max-width: 48rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             pointer-events: none;
         }
 
         .tool-message {
-            background-color: rgba(20, 20, 20, 0.8);
-            border-radius: 8px;
+            font-weight: bold;
             padding: 0.5rem 1rem;
-            margin-bottom: 0.5rem;
             color: #a0a0a0;
             font-size: 0.9rem;
             opacity: 0;
-            animation: slideUpFadeIn 500ms ease-out forwards;
-            width: 100%;
-            text-align: center;
+            text-align: left;
         }
 
         .loading-indicator {
@@ -505,20 +524,12 @@
         // Add tool message
         function addToolMessage(message) {
             // Make existing tool messages slide up and fade out
-            const existingToolMessages = toolMessagesContainer.querySelectorAll('.tool-message');
-            existingToolMessages.forEach(msg => {
-                msg.classList.add('tool-message-fade-out');
-                // Remove after animation completes
-                setTimeout(() => {
-                    if (msg.parentNode === toolMessagesContainer) {
-                        toolMessagesContainer.removeChild(msg);
-                    }
-                }, 500); // Match animation duration
-            });
+            fadeOutAllToolMessages();
 
             // Create new tool message element
             const toolMessageElement = document.createElement('div');
             toolMessageElement.classList.add('tool-message');
+            toolMessageElement.classList.add('tool-message-fade-in');
             toolMessageElement.textContent = message;
 
             // Add new tool message
@@ -529,6 +540,7 @@
         function fadeOutAllToolMessages() {
             const toolMessages = toolMessagesContainer.querySelectorAll('.tool-message');
             toolMessages.forEach(msg => {
+                msg.classList.remove('tool-message-fade-in');
                 msg.classList.add('tool-message-fade-out');
                 // Remove after animation completes
                 setTimeout(() => {
