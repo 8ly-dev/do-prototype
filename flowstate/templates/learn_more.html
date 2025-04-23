@@ -183,7 +183,20 @@
             }
         }
 
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
         .tool-message-fade-out {
+            animation: fadeOut 500ms ease-out forwards;
+        }
+
+        .tool-message-fade-out:has(+ .tool-message) {
             animation: toolSlideUpFadeOut 500ms ease-out forwards;
         }
 
