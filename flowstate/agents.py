@@ -5,8 +5,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Literal, Type
 
-from pydantic_ai.models.groq import GroqModel
-from pydantic_ai.providers.groq import GroqProvider
+from pydantic_ai.models.gemini import GeminiModel
 from pydantic_ai import Agent as PydanticAgent
 from pydantic import BaseModel as PydanticModel, Field as PydanticField
 from starlette.websockets import WebSocket
@@ -14,11 +13,15 @@ from starlette.websockets import WebSocket
 from flowstate.db_models import get_db, Project, Task, TaskType, User
 from flowstate.secrets import get_secrets
 
+from pydantic_ai.providers.google_gla import GoogleGLAProvider
+
 _model = None
 
 @dataclass
 class LLMSettings:
     groq_token: str
+    google_token: str
+    openai_token: str
     model: str
 
 
@@ -26,9 +29,11 @@ def get_model():
     global _model
     if _model is None:
         llm_settings = get_secrets("llm-settings", LLMSettings)
-        _model = GroqModel(
+        _model = GeminiModel(
             llm_settings.model,
-            provider=GroqProvider(api_key=llm_settings.groq_token)
+            provider=GoogleGLAProvider(
+                api_key=llm_settings.google_token
+            )
         )
 
     return _model
