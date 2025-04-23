@@ -66,6 +66,24 @@
             border-image: linear-gradient(90deg, #6366F1, #8B5CF6, #EC4899, #F43F5E, #6366F1) 1;
             padding-top: 2rem;
         }
+
+        .user-message {
+            background-image: linear-gradient(30deg, #4338CA, #6D28D9, #BE185D);
+            color: #e0e0e0;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            margin: 0.75rem 0 0.75rem auto;
+            max-width: 50%;
+            align-self: flex-end;
+            text-align: left;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-word;
+            max-height: calc(1.5em * 3 + 1.5rem);
+        }
         /* Markdown styles */
         .markdown-content h1 {
             font-size: 1.5rem;
@@ -85,7 +103,7 @@
             margin-top: 0.5rem;
             margin-bottom: 0.5rem;
         }
-        .markdown-content p {
+        .markdown-content p:has(+ .markdown-content p) {
             margin-bottom: 0.5rem;
         }
         .markdown-content ul, .markdown-content ol {
@@ -445,6 +463,8 @@
             const message = chatInput.value.trim();
 
             if (message) {
+                addMessage(message, 'user');
+
                 // Send message to server
                 socket.send(JSON.stringify({
                     type: 'message',
@@ -471,6 +491,7 @@
                         'click',
                         event => {
                             let text = event.target.innerText;
+                            addMessage(text, 'user');
                             showLoadingIndicator();
                             socket.send(JSON.stringify({
                                 type: 'action',
