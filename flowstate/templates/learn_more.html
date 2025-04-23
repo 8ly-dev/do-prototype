@@ -148,6 +148,48 @@
             animation-delay: 360ms;
         }
 
+        @keyframes slideUpFadeOut {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        .tool-message-fade-out {
+            animation: slideUpFadeOut 500ms ease-out forwards;
+        }
+
+        #tool-messages-container {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9;
+            width: 100%;
+            max-width: 48rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .tool-message {
+            background-color: rgba(20, 20, 20, 0.8);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: slideUpFadeIn 500ms ease-out forwards;
+            width: 100%;
+            text-align: center;
+        }
+
         .loading-indicator {
             display: none;
             position: fixed;
@@ -228,8 +270,11 @@
             </div>
         </div>
 
+
         <!-- Input Area -->
         <div class="input-area w-full max-w-3xl mb-4">
+            <!-- Tool Messages Container -->
+            <div id="tool-messages-container"></div>
             <form id="chat-form" class="flex items-center p-2">
                 <input type="text"
                        id="chat-input"
@@ -253,6 +298,7 @@
         const chatInput = document.getElementById('chat-input');
         const chatMessages = document.getElementById('chat-messages');
         const loadingIndicator = document.getElementById('loading-indicator');
+        const toolMessagesContainer = document.getElementById('tool-messages-container');
 
         // Listen for keydown events on the document to focus the input field
         document.addEventListener('keydown', function(event) {
@@ -330,13 +376,15 @@
                 case 'reply':
                     hideLoadingIndicator();
                     addMessage(data.reply, 'system');
+                    fadeOutAllToolMessages();
                     break;
                 case 'actions':
                     addActions(data.actions);
                     break;
                 case 'using':
-                    console.log("Using " + data.tool_message)
-                    break
+                    console.log("Using " + data.tool_message);
+                    addToolMessage(data.tool_message);
+                    break;
                 default:
                     console.log(data);
                     throw new Error(`Unknown message type: ${data}`);
@@ -347,6 +395,7 @@
         socket.addEventListener('close', function(event) {
             console.log('Disconnected from WebSocket server');
             hideLoadingIndicator();
+            fadeOutAllToolMessages();
             addMessage('Connection closed. Please refresh the page to reconnect.', 'system');
         });
 
@@ -354,6 +403,7 @@
         socket.addEventListener('error', function(event) {
             console.error('WebSocket error:', event);
             hideLoadingIndicator();
+            fadeOutAllToolMessages();
             addMessage('Error connecting to server.', 'system');
         });
 
@@ -450,6 +500,43 @@
         // Hide loading indicator
         function hideLoadingIndicator() {
             loadingIndicator.style.display = 'none';
+        }
+
+        // Add tool message
+        function addToolMessage(message) {
+            // Make existing tool messages slide up and fade out
+            const existingToolMessages = toolMessagesContainer.querySelectorAll('.tool-message');
+            existingToolMessages.forEach(msg => {
+                msg.classList.add('tool-message-fade-out');
+                // Remove after animation completes
+                setTimeout(() => {
+                    if (msg.parentNode === toolMessagesContainer) {
+                        toolMessagesContainer.removeChild(msg);
+                    }
+                }, 500); // Match animation duration
+            });
+
+            // Create new tool message element
+            const toolMessageElement = document.createElement('div');
+            toolMessageElement.classList.add('tool-message');
+            toolMessageElement.textContent = message;
+
+            // Add new tool message
+            toolMessagesContainer.appendChild(toolMessageElement);
+        }
+
+        // Fade out all tool messages
+        function fadeOutAllToolMessages() {
+            const toolMessages = toolMessagesContainer.querySelectorAll('.tool-message');
+            toolMessages.forEach(msg => {
+                msg.classList.add('tool-message-fade-out');
+                // Remove after animation completes
+                setTimeout(() => {
+                    if (msg.parentNode === toolMessagesContainer) {
+                        toolMessagesContainer.removeChild(msg);
+                    }
+                }, 500); // Match animation duration
+            });
         }
     });
 </script>

@@ -1,4 +1,5 @@
 import asyncio
+import json
 import random
 import re
 import time
@@ -10,10 +11,9 @@ from starlette.exceptions import HTTPException
 from starlette.responses import HTMLResponse, RedirectResponse
 from starlette.routing import Route, WebSocketRoute
 from starlette.requests import Request
-from starlette.websockets import WebSocket, WebSocketState
+from starlette.websockets import WebSocket
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
-import json
 
 from flowstate.agents import LearnMoreAgent, LearnMoreSuggestedActionsAgent, TaskAgent
 from flowstate.auth import verify_access_token, generate_access_token
@@ -212,30 +212,30 @@ async def learn_more_chat_websocket(websocket: WebSocket):
     user = db.get_user_by_id(user_id) if user_id else None
 
     agent = LearnMoreAgent(user, websocket)
-    await websocket.send_text(
-        json.dumps(
-            {
-                "type": "command",
-                "command": "typing",
-            }
-        )
+    await websocket.send_json(
+        {
+            "type": "command",
+            "command": "typing",
+        }
     )
     await asyncio.sleep(1)
-    await websocket.send_text(
-        json.dumps(
-            {
-                "type": "reply",
-                "reply": agent.readme,
-            }
-        )
+    await websocket.send_json(
+        {
+            "type": "reply",
+            "reply": agent.readme,
+        }
     )
-    await websocket.send_text(
-        json.dumps(
-            {
-                "type": "actions",
-                "actions": await LearnMoreSuggestedActionsAgent(context=agent.readme).send_prompt(),
-            }
-        )
+    await websocket.send_json(
+        {
+            "type": "using",
+            "command": "Testing tool text",
+        }
+    )
+    await websocket.send_json(
+        {
+            "type": "actions",
+            "actions": await LearnMoreSuggestedActionsAgent(context=agent.readme).send_prompt(),
+        }
     )
     try:
         while True:
@@ -243,43 +243,35 @@ async def learn_more_chat_websocket(websocket: WebSocket):
             try:
                 response = await agent.send_prompt(data)
             except pydantic_ai.exceptions.ModelHTTPError:
-                await websocket.send_text(
-                    json.dumps(
-                        {
-                            "type": "reply",
-                            "reply": "I'm sorry, something went wrong. Please try again in a moment.",
-                        }
-                    )
+                await websocket.send_json(
+                    {
+                        "type": "reply",
+                        "reply": "I'm sorry, something went wrong. Please try again in a moment.",
+                    }
                 )
-                await websocket.send_text(
-                    json.dumps(
-                        {
-                            "type": "command",
-                            "command": "reload",
-                        }
-                    )
+                await websocket.send_json(
+                    {
+                        "type": "command",
+                        "command": "reload",
+                    }
                 )
                 raise
             else:
                 response = clean_response(response)
-                await websocket.send_text(
-                    json.dumps(
-                        {
-                            "type": "reply",
-                            "reply": response,
-                        }
-                    )
+                await websocket.send_json(
+                    {
+                        "type": "reply",
+                        "reply": response,
+                    }
                 )
                 actions_agent = LearnMoreSuggestedActionsAgent(agent.history[:5])
                 suggested_actions = await actions_agent.send_prompt(response)
                 if suggested_actions:
-                    await websocket.send_text(
-                        json.dumps(
-                            {
-                                "type": "actions",
-                                "actions": suggested_actions,
-                            }
-                        )
+                    await websocket.send_json(
+                        {
+                            "type": "actions",
+                            "actions": suggested_actions,
+                        }
                     )
 
     except starlette.websockets.WebSocketDisconnect:
