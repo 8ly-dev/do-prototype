@@ -388,7 +388,18 @@ class LearnMoreAgent(Agent):
         return files
 
 
-class LearnMoreSuggestedActionsAgent(Agent):
+
+class SuggestedActions(PydanticModel):
+    """Three suggested actions for the user to take."""
+    action_1: str = PydanticField(description="The first suggested action.")
+    action_2: str = PydanticField(description="The second suggested action.")
+    action_3: str = PydanticField(description="The third suggested action.")
+
+    def to_list(self) -> list[str]:
+        return [self.action_1, self.action_2, self.action_3]
+
+
+class LearnMoreSuggestedActionsAgent(Agent[None, SuggestedActions]):
     """You are the user and ask questions on their behalf. The user is a potential co-founder and needs to understand
     the viability and potential of 8ly and Flowstate."""
     def __init__(self, history: list | None = None, *, context: str | None = None):
@@ -401,5 +412,5 @@ class LearnMoreSuggestedActionsAgent(Agent):
     def send_prompt(self, *args, **kwargs):
         return super().send_prompt(
             "Based on the previous conversation, what are three, very short, questions the user has now?",
-            output_type=list[str],
+            output_type=SuggestedActions,
         )
