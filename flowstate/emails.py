@@ -1,3 +1,10 @@
+"""
+Email utilities for the Flowstate application.
+
+This module provides classes and functions for sending emails,
+including dataclasses for representing email messages and sender configurations.
+"""
+
 import smtplib
 from dataclasses import dataclass
 from email.mime.text import MIMEText
@@ -7,6 +14,17 @@ import flowstate.secrets
 
 @dataclass
 class Email:
+    """
+    Represents an email message.
+
+    Attributes:
+        to: The recipient's email address
+        subject: The subject of the email
+        body: The body text of the email
+        from_sender: Optional sender email address (defaults to the SMTP username if not provided)
+        cc: Optional comma-separated list of CC recipients
+        bcc: Optional comma-separated list of BCC recipients
+    """
     to: str
     subject: str
     body: str
@@ -17,6 +35,15 @@ class Email:
 
 @dataclass
 class Sender:
+    """
+    Represents SMTP server configuration for sending emails.
+
+    Attributes:
+        server: The SMTP server hostname
+        port: The SMTP server port
+        username: The username for SMTP authentication
+        password: The password for SMTP authentication
+    """
     server: str
     port: int
     username: str
@@ -27,7 +54,16 @@ def send_email(
     email: Email,
     sender: Sender,
 ):
-    """Sends an email to the specified address."""
+    """
+    Send an email using the specified sender configuration.
+
+    This function creates a MIME message from the Email object and sends it
+    using the SMTP server configuration in the Sender object.
+
+    Args:
+        email: The Email object containing the message details
+        sender: The Sender object containing the SMTP server configuration
+    """
     message = MIMEMultipart()
     message["From"] = email.from_sender or sender.username
     message["To"] = email.to

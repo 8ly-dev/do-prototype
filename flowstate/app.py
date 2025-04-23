@@ -1,3 +1,10 @@
+"""
+This module contains the main web application for Flowstate.
+
+It defines the routes, request handlers, and WebSocket handlers for the application.
+The application uses Starlette as the web framework and Jinja2 for templating.
+"""
+
 import asyncio
 import json
 import random
@@ -26,6 +33,18 @@ templates = Environment(
 
 
 async def homepage(request: Request):
+    """
+    Handle requests to the homepage.
+
+    If the user is authenticated, render the dashboard with their projects and top task.
+    Otherwise, render the login page.
+
+    Args:
+        request: The incoming HTTP request
+
+    Returns:
+        An HTML response with either the dashboard or login page
+    """
     token = request.cookies.get("SESSION_TOKEN")
     if token:
         user_id = verify_access_token(token)
@@ -42,11 +61,36 @@ async def homepage(request: Request):
 
 
 async def login_get(request: Request):
+    """
+    Handle GET requests to the login page.
+
+    Simply redirects to the homepage, which will show the login page if needed.
+
+    Args:
+        request: The incoming HTTP request
+
+    Returns:
+        A redirect response to the homepage
+    """
     # Simply redirect to the home page
     return RedirectResponse(url="/", status_code=302)
 
 
 async def login_post(request: Request):
+    """
+    Handle POST requests to the login endpoint.
+
+    Process the login form submission. If a username is provided, either find the existing
+    user or create a new one, then set a session token cookie and redirect to the homepage.
+    If no username is provided, redirect back to the login page.
+
+    Args:
+        request: The incoming HTTP request with form data
+
+    Returns:
+        A redirect response to the homepage with a session token cookie if login is successful,
+        or a redirect back to the login page if no username is provided
+    """
     form_data = await request.form()
     username = form_data.get("username")
 
@@ -70,12 +114,39 @@ async def login_post(request: Request):
 
 
 async def logout(request: Request):
+    """
+    Handle requests to the logout endpoint.
+
+    Delete the session token cookie and redirect to the homepage.
+
+    Args:
+        request: The incoming HTTP request
+
+    Returns:
+        A redirect response to the homepage with the session token cookie deleted
+    """
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie("SESSION_TOKEN")
     return response
 
 
 async def project_view(request: Request):
+    """
+    Handle requests to view a specific project.
+
+    If the user is authenticated, render the project page with the project details,
+    tasks, and other projects. If the user is not authenticated or the project is
+    not found, redirect to the homepage or raise a 404 error.
+
+    Args:
+        request: The incoming HTTP request with the project slug in path_params
+
+    Returns:
+        An HTML response with the project page
+
+    Raises:
+        HTTPException: If the project is not found
+    """
     token = request.cookies.get("SESSION_TOKEN")
     if not token:
         return RedirectResponse(url="/", status_code=302)
@@ -119,6 +190,19 @@ async def project_view(request: Request):
 
 
 async def chat_websocket(websocket: WebSocket):
+    """
+    Handle WebSocket connections for the chat feature.
+
+    This function authenticates the user, sets up a TaskAgent, and processes messages
+    from the client. It also handles task completion requests and sends responses back
+    to the client.
+
+    Args:
+        websocket: The WebSocket connection
+
+    Returns:
+        None
+    """
     db = get_db()
     print("CONNECTING")
     session_token = websocket.cookies.get("SESSION_TOKEN")
@@ -203,6 +287,19 @@ async def chat_websocket(websocket: WebSocket):
 
 
 async def learn_more_chat_websocket(websocket: WebSocket):
+    """
+    Handle WebSocket connections for the learn more page.
+
+    This function sets up a LearnMoreAgent, sends the README content to the client,
+    and processes messages from the client. It also handles suggested actions and
+    tool usage messages.
+
+    Args:
+        websocket: The WebSocket connection
+
+    Returns:
+        None
+    """
     print("CONNECTING")
     await websocket.accept()
     closed = False
@@ -289,6 +386,16 @@ async def learn_more_chat_websocket(websocket: WebSocket):
 async def http_exception(request: Request, exc: HTTPException):
     """
     Handle HTTP exceptions with custom templates.
+
+    This function renders a custom 404 page for 404 errors and a generic error page
+    for other HTTP exceptions.
+
+    Args:
+        request: The incoming HTTP request
+        exc: The HTTP exception that was raised
+
+    Returns:
+        An HTML response with the appropriate error page and status code
     """
     if exc.status_code == 404:
         template = templates.get_template("404.html")
@@ -301,6 +408,15 @@ async def http_exception(request: Request, exc: HTTPException):
 async def not_found(request: Request, exc: Exception):
     """
     Handle 404 errors when a route is not found.
+
+    This function renders a custom 404 page when a route is not found.
+
+    Args:
+        request: The incoming HTTP request
+        exc: The exception that was raised
+
+    Returns:
+        An HTML response with the 404 page and a 404 status code
     """
     template = templates.get_template("404.html")
     return HTMLResponse(template.render(), status_code=404)
@@ -308,7 +424,15 @@ async def not_found(request: Request, exc: Exception):
 
 async def learn_more(request: Request):
     """
-    Handle the Learn More page.
+    Handle requests to the Learn More page.
+
+    This function renders the learn_more.html template.
+
+    Args:
+        request: The incoming HTTP request
+
+    Returns:
+        An HTML response with the Learn More page
     """
     template = templates.get_template("learn_more.html")
     return HTMLResponse(template.render())
@@ -337,4 +461,16 @@ app = Starlette(
 
 
 def clean_response(response: str) -> str:
+    """
+    Clean the response text by ensuring there's a space before "8ly".
+
+    This function adds a space before "8ly" if there isn't already a space before it,
+    to ensure proper formatting in the response text.
+
+    Args:
+        response: The response text to clean
+
+    Returns:
+        The cleaned response text
+    """
     return re.sub(r'([^\s])(8ly)', r'\g<1> \g<2>', response)

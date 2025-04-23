@@ -1,3 +1,10 @@
+"""
+Task view handlers for the Flowstate application.
+
+This module provides request handlers for viewing and updating tasks,
+with support for different task types (todo, email, reminder, calendar, create_task).
+"""
+
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse
 from starlette.exceptions import HTTPException
@@ -17,15 +24,37 @@ templates = Environment(
 
 # Add custom filters
 def fromjson_filter(value):
-    """Convert a JSON string to a Python object."""
+    """
+    Convert a JSON string to a Python object.
+
+    This filter is used in templates to parse JSON data stored in task descriptions.
+
+    Args:
+        value: The JSON string to convert
+
+    Returns:
+        The Python object represented by the JSON string
+    """
     return json.loads(value)
 
 templates.filters['fromjson'] = fromjson_filter
 
 async def task_view(request: Request):
     """
-    View for displaying and interacting with a task.
-    The view is contextual based on the task type.
+    Handle requests to view a task.
+
+    This function renders different templates based on the task type (todo, email, reminder, 
+    calendar, create_task). For email tasks, it also generates email suggestions using 
+    the EmailAgent.
+
+    Args:
+        request: The incoming HTTP request with the task_id in path_params
+
+    Returns:
+        An HTML response with the appropriate task template
+
+    Raises:
+        HTTPException: If the task is not found or the user doesn't have access to it
     """
     # Check authentication
     token = request.cookies.get("SESSION_TOKEN")
@@ -97,7 +126,20 @@ async def task_view(request: Request):
 
 async def task_update(request: Request):
     """
-    Handle updates to a task.
+    Handle requests to update a task.
+
+    This function processes form submissions for different task types and updates
+    the task in the database accordingly. For email tasks, it can also send the email
+    if requested.
+
+    Args:
+        request: The incoming HTTP request with the task_id in path_params and form data
+
+    Returns:
+        A redirect response to the task view page or project page
+
+    Raises:
+        HTTPException: If the task is not found or the user doesn't have access to it
     """
     # Check authentication
     token = request.cookies.get("SESSION_TOKEN")
