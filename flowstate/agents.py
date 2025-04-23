@@ -339,18 +339,20 @@ class LearnMoreAgent(Agent):
         self._chat = chat
         self._file_cache = {}
         self._path_cache = []
+        self._root = Path(__file__).parent.parent
         super().__init__()
 
     async def list_files(self) -> list[str]:
-        """List all files available in the project."""
+        """Activate this tool whenever you need to know what documents are available to you to answer the user's
+        questions."""
         await self._chat.send_json({"type": "using", "tool_message": "Listing files"})
         files = self._find_files()
         print("LISTING FILES", files)
         return files
 
     async def read_file(self, file_path: str):
-        """Read the contents of a file. Make sure file paths are exact fully qualified path to the file. Returns access
-        denied error if the file doesn't exist."""
+        """Activate this tool whenever you need to read a document. Use the file path to locate the file. If the file
+        doesn't exist, you'll get an error message back."""
         print(f"READING: {file_path}")
         await self._chat.send_json({"type": "using", "tool_message": f"Reading {file_path.split('/')[-1]}"})
         if file_path in self._file_cache:
@@ -360,7 +362,8 @@ class LearnMoreAgent(Agent):
             print("- Access denied: File not found.")
             return f"Access denied: File {file_path} not found."
 
-        with open(file_path, "r") as f:
+        print(f"- {str(self._root)}/{file_path}")
+        with open(f"{str(self._root)}/{file_path}", "r") as f:
             file = f.read()
 
         self._file_cache[file_path] = file
@@ -371,12 +374,12 @@ class LearnMoreAgent(Agent):
         if not path and self._path_cache:
             return self._path_cache
 
-        _path = path or Path(__file__).parent.parent
+        _path = path or self._root
         if _path.name.startswith("."):
             return []
 
         if _path.is_file():
-            return [str(_path).lower()]
+            return [str(_path).lower().replace(str(self._root).lower(), "").lstrip("/")]
 
         files = list(chain(*(self._find_files(child) for child in _path.iterdir())))
         if not path:
