@@ -25,6 +25,7 @@ from flowstate.secrets import get_secrets
 from pydantic_ai.providers.google_gla import GoogleGLAProvider
 
 _model = None
+_small_model = None
 
 @dataclass
 class LLMSettings:
@@ -36,11 +37,13 @@ class LLMSettings:
         google_token: API token for Google
         openai_token: API token for OpenAI
         model: Name of the language model to use
+        small_model: Name of the small language model to use
     """
     groq_token: str
     google_token: str
     openai_token: str
     model: str
+    small_model: str
 
 
 def get_model():
@@ -52,15 +55,34 @@ def get_model():
     """
     global _model
     if _model is None:
-        llm_settings = get_secrets("llm-settings", LLMSettings)
-        _model = GeminiModel(
-            llm_settings.model,
-            provider=GoogleGLAProvider(
-                api_key=llm_settings.google_token
-            )
-        )
+        _model = _create_model("large")
 
     return _model
+
+
+def get_small_model():
+    """
+    Get or initialize the small language model.
+
+    Returns:
+        A configured GeminiModel instance using settings from secrets.
+    """
+    global _small_model
+    if _small_model is None:
+        _small_model = _create_model("small")
+
+    return _small_model
+
+
+
+def _create_model(size: Literal["large", "small"] = "large"):
+    llm_settings = get_secrets("llm-settings", LLMSettings)
+    return GeminiModel(
+        llm_settings.model if size == "large" else llm_settings.small_model,
+        provider=GoogleGLAProvider(
+            api_key=llm_settings.google_token
+        )
+    )
 
 
 class Agent[DT, OT: str]:
@@ -158,6 +180,7 @@ class Agent[DT, OT: str]:
     async def __current_date(self) -> str:
         """Helper method to get the current date UTC in the format YYYY-MM-DD."""
         return datetime.now(UTC).strftime("%Y-%m-%d")
+
 
 class EmailHelperSuggestions(PydanticModel):
     """
@@ -547,6 +570,8 @@ class SuggestedActions(PydanticModel):
 class LearnMoreSuggestedActionsAgent(Agent[None, SuggestedActions]):
     """You are the user and ask questions on their behalf. The user is a potential co-founder and needs to understand
     the viability and potential of 8ly and Flowstate."""
+    agent_factory = lambda _: get_small_model()
+
     def __init__(self, history: list | None = None, *, context: str | None = None):
         """
         Initialize the LearnMoreSuggestedActionsAgent with optional history and context.
