@@ -32,7 +32,9 @@ hr {
 }
 
 .input-area form {
-  background-color: #141414;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);                    /* Blurs content behind */
+  -webkit-backdrop-filter: blur(6px);            /* For Safari support */
   border-radius: 8px;
 }
 
@@ -495,6 +497,12 @@ body.learn-more #suggested-questions a {
 body.learn-more #suggested-questions a:hover {
   border-color: #ffffff;
   color: #ffffff;
+}
+
+body.learn-more .header-bar {
+  backdrop-filter: blur(4px);                    /* Blurs content behind */
+  -webkit-backdrop-filter: blur(4px);            /* For Safari support */
+  border-bottom: 1px solid rgba(64, 64, 64, 0.3);    /* Optional: subtle border */
 }
 
 .thinking {
