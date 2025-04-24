@@ -456,6 +456,10 @@ class LearnMoreAgent(Agent):
         self._root = Path(__file__).parent.parent
         super().__init__()
 
+    async def create_github_link(self, file_path: str) -> str:
+        """Creates a link to the file on GitHub."""
+        return f"https://github.com/8ly-dev/flowstate-prototype/blob/main/{file_path}"
+
     async def list_files(self) -> list[str]:
         """Activate this tool whenever you need to know what documents are available to you to answer the user's
         questions."""
