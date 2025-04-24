@@ -325,6 +325,12 @@ async def learn_more_chat_websocket(websocket: WebSocket):
     )
     await websocket.send_json(
         {
+            "type": "using",
+            "tool_message": f"Debugging styles",
+        }
+    )
+    await websocket.send_json(
+        {
             "type": "actions",
             "actions": (await LearnMoreSuggestedActionsAgent(context=agent.readme).send_prompt()).to_list(),
         }

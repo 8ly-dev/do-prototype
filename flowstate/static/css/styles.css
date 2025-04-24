@@ -517,10 +517,8 @@ body.learn-more .header-bar {
 .thinking {
   background: linear-gradient(
     90deg,
-    #999999 0%,
-    #ffffbb 35%,
-    #ffffff 50%,
-    #ffffbb 65%,
+    #999999 60%,
+    #ffffff 90%,
     #999999 100%
   );
   background-clip: text;
@@ -528,7 +526,7 @@ body.learn-more .header-bar {
   -webkit-background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  animation: gradient-move 2s linear infinite;
+  animation: gradient-move 1.5s linear infinite;
 }
 
 .thinking-slow {
@@ -536,7 +534,7 @@ body.learn-more .header-bar {
 }
 
 .thinking-slow:hover {
-  animation-duration: 2s;
+  animation-duration: 1.5s;
 }
 
 @keyframes gradient-move {
