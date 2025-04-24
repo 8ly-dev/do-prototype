@@ -434,7 +434,9 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
 
 
 class LearnMoreAgent(Agent):
-    """You don't have a name, you are an authoritative representative of our company, 8ly, and our first app, Flowstate.
+    """You don't have a name, you are an authoritative representative of our company, 8ly, our first app, Flowstate, and
+    me, Zech, the founder.
+
     Your purpose is to communicate the goals and values of 8ly and the value of Flowstate to investors and potential
     co-founders. You're also tasked with discussing the prototype's codebase with the goal of demonstrating the
     feasibility of the project using existing technologies and putting the user at ease that we understand what to do.
@@ -462,7 +464,10 @@ class LearnMoreAgent(Agent):
     expectation.
     - When sharing links, use markdown link formatting.
 
-    ALWAYS surface information relevant to the user's question to avoid the need for followup questions."""
+    ALWAYS surface information relevant to the user's question to avoid the need for followup questions.
+    ALWAYS validate technical answers against the codebase.
+
+    Whatever you do: NEVER EVER make anything up. All necessary information is available in the documents."""
     def __init__(self, user: User | None, chat: WebSocket):
         """
         Initialize the LearnMoreAgent with user information and WebSocket connection.
@@ -564,43 +569,31 @@ class SuggestedActions(PydanticModel):
         Returns:
             A list containing the three suggested actions
         """
-        return [self.action_1, self.action_2, self.action_3]
+        return [
+            action.strip(" .")
+            for action in [self.action_1, self.action_2, self.action_3]
+            if action
+        ]
 
 
 class LearnMoreSuggestedActionsAgent(Agent[None, SuggestedActions]):
-    """You are the user and ask questions on their behalf. The user is a potential co-founder and needs to understand
-    the viability and potential of 8ly and Flowstate."""
+    """You'll be given messages in a conversation between USER and AGENT. In this conversation AGENT is representing a
+    pre-seed startup (8ly) that is seeking both co-founders and financial backers. USER is either a potential
+    co-founder or financial backer attempting to evaluate 8ly and it's app, Flowstate. Based on the conversation,
+    provide 3 guesses as to what the USER might ask next.
+
+    Have a mindset of exploration, outside the box, digging deeper. Don't ask the same generic questions. Possible
+    areas of interest to the USER:
+    - Prototype codebase (co-founders especially)
+    - Funding
+    - Timelines
+    - Team
+    - Features
+
+    Guidelines:
+    - Questions should be 8 to 12 words
+    - Questions should never refer to AGENT, only the app or startup
+    - Guesses MUST BE QUESTIONS, never guess that they'll make a statement
+    """
     agent_factory = lambda _: get_small_model()
-
-    def __init__(self, history: list | None = None, *, context: str | None = None):
-        """
-        Initialize the LearnMoreSuggestedActionsAgent with optional history and context.
-
-        Args:
-            history: Optional conversation history
-            context: Optional additional context to add to the system prompt
-        """
-        if context:
-            self.system_prompt += f"\n\n{context}"
-
-        super().__init__()
-        self.history = history or []
-
-    def send_prompt(self, *args, **kwargs):
-        """
-        Send a prompt to generate suggested actions for the user.
-
-        This method overrides the base send_prompt method to always ask for three
-        suggested questions based on the conversation context.
-
-        Args:
-            *args: Ignored positional arguments
-            **kwargs: Ignored keyword arguments
-
-        Returns:
-            A list of three suggested questions
-        """
-        return super().send_prompt(
-            "Based on the previous conversation, what are three, very short, questions the user has now?",
-            output_type=SuggestedActions,
-        )
+    output_type = SuggestedActions
