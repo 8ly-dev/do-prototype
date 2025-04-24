@@ -234,7 +234,7 @@
 
                 // Parse markdown to HTML
                 const htmlContent = marked.parse(message);
-                messageElement.innerHTML = htmlContent;
+                messageElement.innerHTML = `<div class="content">${htmlContent}</div>`;
 
             } catch (error) {
                 console.error('Error parsing markdown:', error);

@@ -62,21 +62,19 @@ hr {
   border-radius: 1rem;
   padding: 0.75rem 1rem;
   margin: 0.75rem 0 0.75rem auto;
-  max-width: 50%;
-  width: max-content;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  word-break: break-word;
-  max-height: calc(1.5em * 3 + 1.5rem);
+  max-width: 66%;
+  width: fit-content;
   align-self: flex-end;
   text-align: left;
 }
 
-.user-message p {
-  width: max-content;
+.user-message .content{
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; /* Number of lines */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: calc(1.5em * 3 + 1.5rem);
 }
 
 /* Markdown styles */
