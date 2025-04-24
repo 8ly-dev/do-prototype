@@ -373,21 +373,13 @@ body.dashboard .chat-area {
   max-height: 300px;
 }
 
-body.dashboard .right-now-card {
-  background-color: #141414;
+.right-now-card {
   border-radius: 12px;
-  padding: 1.5rem;
 }
 
 /* Project page */
 body.project .chat-area {
   max-height: 300px;
-}
-
-body.project .right-now-card {
-  background-color: #141414;
-  border-radius: 12px;
-  padding: 1.5rem;
 }
 
 body.project .task-card {
