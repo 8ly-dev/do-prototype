@@ -475,4 +475,4 @@ def clean_response(response: str) -> str:
     Returns:
         The cleaned response text
     """
-    return re.sub(r'([^\s])(8ly)', r'\g<1> \g<2>', response)
+    return re.sub(r'([^\s\-_"\'./\\])(8ly)', r'\g<1> \g<2>', response)
