@@ -414,13 +414,14 @@ body.learn-more .input-area {
   padding: 0.5rem;
 }
 
-body.learn-more .user-message {
+.user-message {
   background-image: linear-gradient(30deg, #4338CA, #6D28D9, #BE185D);
   color: #e0e0e0;
   border-radius: 1rem;
   padding: 0.75rem 1rem;
   margin: 0.75rem 0 0.75rem auto;
   max-width: 50%;
+  width: max-content;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -428,6 +429,10 @@ body.learn-more .user-message {
   text-overflow: ellipsis;
   word-break: break-word;
   max-height: calc(1.5em * 3 + 1.5rem);
+}
+
+.user-message p {
+  width: max-content;
 }
 
 body.learn-more .system-message + .system-message {
