@@ -13,7 +13,7 @@ from starlette.routing import Route, WebSocketRoute, Mount
 from starlette.staticfiles import StaticFiles
 
 from flowstate.views import homepage, login_get, login_post, logout, project_view, learn_more
-from flowstate.websocket_handlers import chat_websocket, learn_more_chat_websocket
+from flowstate.chats import chat_websocket, learn_more_chat_websocket
 from flowstate.exception_handlers import http_exception, not_found
 from flowstate.task_views import task_view, task_update
 
