@@ -184,6 +184,15 @@ hr {
 @keyframes fadeIn {
   0% {
     opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideRightFadeIn {
+  0% {
+    opacity: 0;
     transform: translateX(-20px);
   }
   100% {
@@ -465,7 +474,7 @@ body.learn-more .tool-message-fade-out:has(+ .tool-message) {
 
 body.learn-more .tool-message-fade-in {
   animation-delay: 250ms;
-  animation: fadeIn 500ms ease-in forwards;
+  animation: slideRightFadeIn 500ms ease-in forwards;
 }
 
 body.learn-more #suggested-questions {
