@@ -232,12 +232,12 @@ hr {
 
 .message-fade-in {
   opacity: 0;
-  animation: slideUpFadeIn 720ms linear forwards;
+  animation: fadeIn 720ms linear forwards;
   animation-delay: 360ms;
 }
 
 .message-fade-out {
-  animation: slideUpFadeOut 720ms linear forwards;
+  animation: fadeOut 720ms linear forwards;
 }
 
 /* Loading indicator */
