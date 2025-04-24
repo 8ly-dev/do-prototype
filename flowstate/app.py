@@ -316,17 +316,18 @@ async def learn_more_chat_websocket(websocket: WebSocket):
             "command": "typing",
         }
     )
-    await asyncio.sleep(1)
+    name = f" {user.username}" if user else ""
+    await websocket.send_json(
+        {
+            "type": "using",
+            "tool_message": f"Hi{name}, I'm thinking, one moment please",
+        }
+    )
+    await asyncio.sleep(3)
     await websocket.send_json(
         {
             "type": "reply",
             "reply": agent.readme,
-        }
-    )
-    await websocket.send_json(
-        {
-            "type": "using",
-            "tool_message": f"Debugging styles",
         }
     )
     await websocket.send_json(
