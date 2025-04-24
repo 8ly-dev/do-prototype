@@ -16,9 +16,10 @@ import starlette
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.responses import HTMLResponse, RedirectResponse
-from starlette.routing import Route, WebSocketRoute
+from starlette.routing import Route, WebSocketRoute, Mount
 from starlette.requests import Request
 from starlette.websockets import WebSocket
+from starlette.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
@@ -452,6 +453,7 @@ app = Starlette(
         WebSocketRoute("/ws", chat_websocket),
         WebSocketRoute("/ws/{project_id:int}", chat_websocket),
         WebSocketRoute("/ws/learn-more", learn_more_chat_websocket),
+        Mount("/static", app=StaticFiles(directory=Path(__file__).parent / "static"), name="static"),
     ],
     exception_handlers={
         404: not_found,
