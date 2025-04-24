@@ -272,12 +272,9 @@
 
             // Create new tool message element
             const toolMessageElement = document.createElement('div');
-            const toolMessageTextElement = document.createElement('div');
             toolMessageElement.classList.add('tool-message');
             toolMessageElement.classList.add('tool-message-fade-in');
-            toolMessageTextElement.classList.add('thinking');
-            toolMessageElement.insertBefore(toolMessageTextElement, null);
-            toolMessageTextElement.textContent = message;
+            toolMessageElement.textContent = message;
 
             // Add new tool message
             toolMessagesContainer.appendChild(toolMessageElement);
