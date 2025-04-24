@@ -31,7 +31,7 @@ hr {
   overflow-y: auto;
 }
 
-.input-area {
+.input-area form {
   background-color: #141414;
   border-radius: 8px;
 }
@@ -415,11 +415,6 @@ body.learn-more .chat-area {
   flex: 1;
   padding-bottom: 5rem; /* Increased padding to account for fixed input area */
   max-height: none; /* Override the common max-height */
-}
-
-body.learn-more #chat-form {
-  background-color: #141414;
-  border-radius: 8px;
 }
 
 body.learn-more .input-area {
