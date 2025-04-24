@@ -310,6 +310,7 @@ async def learn_more_chat_websocket(websocket: WebSocket):
     user = db.get_user_by_id(user_id) if user_id else None
 
     agent = LearnMoreAgent(user, websocket)
+    suggestion_agent = LearnMoreSuggestedActionsAgent()
     await websocket.send_json(
         {
             "type": "command",
@@ -323,7 +324,10 @@ async def learn_more_chat_websocket(websocket: WebSocket):
             "tool_message": f"Hi{name}, I'm thinking, one moment please",
         }
     )
-    await asyncio.sleep(3)
+    actions, _ = await asyncio.gather(
+        suggestion_agent.send_prompt(f"AGENT:\n{agent.readme}"),
+        asyncio.sleep(2),
+    )
     await websocket.send_json(
         {
             "type": "reply",
@@ -333,7 +337,7 @@ async def learn_more_chat_websocket(websocket: WebSocket):
     await websocket.send_json(
         {
             "type": "actions",
-            "actions": (await LearnMoreSuggestedActionsAgent(context=agent.readme).send_prompt()).to_list(),
+            "actions": actions.to_list(),
         }
     )
     try:
@@ -364,8 +368,10 @@ async def learn_more_chat_websocket(websocket: WebSocket):
                             "reply": response,
                         }
                     )
-                    actions_agent = LearnMoreSuggestedActionsAgent(agent.history[:5])
-                    suggested_actions = await actions_agent.send_prompt(response)
+                    suggested_actions = await suggestion_agent.send_prompt(
+                        f"USER:\n{data}\n"
+                        f"AGENT:\n{response}\n"
+                    )
                     if suggested_actions:
                         await websocket.send_json(
                             {
