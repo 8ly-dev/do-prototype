@@ -473,7 +473,7 @@ body.learn-more #tool-messages-container {
 
 body.learn-more .tool-message {
   font-weight: bold;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.25rem;
   color: #a0a0a0;
   font-size: 0.9rem;
   opacity: 0;
@@ -494,6 +494,7 @@ body.learn-more .tool-message-fade-in {
 }
 
 body.learn-more #suggested-questions {
+  padding: 0.75rem;
   opacity: 1;
   visibility: visible;
   transition: opacity 0.5s, visibility 0.5s;
@@ -528,6 +529,10 @@ body.learn-more .header-bar {
   backdrop-filter: blur(4px);                    /* Blurs content behind */
   -webkit-backdrop-filter: blur(4px);            /* For Safari support */
   border-bottom: 1px solid rgba(64, 64, 64, 0.3);    /* Optional: subtle border */
+}
+
+body.learn-more .header-bar div {
+  padding: 0 0.75rem;
 }
 
 .thinking {
