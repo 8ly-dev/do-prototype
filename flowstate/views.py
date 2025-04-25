@@ -16,7 +16,7 @@ from flowstate.db_models import get_db
 
 # Use the same template environment as app.py
 templates = Environment(
-    loader=FileSystemLoader(Path(__file__).parent / "templates")
+    loader=FileSystemLoader(Path(__file__).parent.parent / "resources" / "templates")
 )
 
 

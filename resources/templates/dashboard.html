@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flowstate</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="dashboard">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="sidebar h-full flex flex-col">
+      <div class="p-6">
+        <h1 class="text-xl font-semibold mb-8">Projects</h1>
+        <nav>
+          <ul class="space-y-4">
+            {% if not projects %}
+            <li class="project-link">You don't have any projects right now</li>
+            {% else %}
+            {% for project in projects %}
+            {% set project_slug = project.name.lower().replace(" ", "-") %}
+            <li><a href="/project/{{ project_slug }}" class="project-link">{{ project.name }}</a></li>
+            {% endfor %}
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      <div class="mt-auto p-6">
+        <a href="/learn-more" class="project-link block mb-4 thinking thinking-slow">Learn More</a>
+        <a href="/logout" class="project-link">Logout</a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8 flex flex-col">
+      <!-- Right Now Section -->
+      <div class="mb-8 flex-1">
+        {% if top_task %}
+        <h2 class="text-xl font-semibold mb-4">Right Now</h2>
+        {% endif %}
+        <div class="{% if top_task %}right-now-card {% endif %}flex justify-between items-center">
+          {% if top_task %}
+          <div>
+            <h3 class="font-medium">{{ top_task.title }}</h3>
+            {% if top_task.description %}
+            <p class="text-gray-400 text-sm mt-1">{{ top_task.description }}</p>
+            {% endif %}
+          </div>
+          <div id="complete-task-btn" 
+               data-task-id="{{ top_task.id }}"
+               class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center complete-task-button"
+               role="button"
+               tabindex="0"
+               aria-label="Complete task">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Chat Area -->
+      <div class="chat-area mb-6">
+        <div id="chat-messages" class="space-y-4">
+          <!-- Chat messages will be inserted here -->
+        </div>
+        <div id="loading-indicator" class="loading-indicator">
+          <div class="loading-bar"></div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <form id="chat-form" class="flex items-center p-2">
+          <input type="text" 
+                 id="chat-input" 
+                 placeholder="I need to..." 
+                 class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none px-4 py-3"
+                 autocomplete="off">
+          <button type="submit" 
+                  class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center ml-2 hover:bg-indigo-700 transition-colors">
+            <svg class="w-6 h-6 text-white transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/chat.js"></script>
+</body>
+</html>

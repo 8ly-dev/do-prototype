@@ -1,0 +1,27 @@
+{% extends "task_base.html" %}
+
+{% block task_form %}
+<div class="mb-4">
+  <label for="title" class="form-label">Subject</label>
+  <input type="text" id="title" name="title" class="form-input" value="{{ subject }}" required>
+</div>
+
+{% set email_data = task.description|default("{}")|tojson|safe|fromjson %}
+
+<div class="mb-4">
+  <label for="to" class="form-label">To</label>
+  <input type="email" id="to" name="to" class="form-input" value="{{ email_data.to|default('') }}" required>
+</div>
+
+<div class="mb-4">
+  <label for="from" class="form-label">From</label>
+  <input type="email" id="from" name="from" class="form-input" value="{{ user.email }}" readonly>
+</div>
+
+<div class="mb-4">
+  <label for="message" class="form-label">Message</label>
+  <div class="markdown-editor">
+    <textarea id="message" name="message" class="markdown-editor-textarea">{{ message|default('') }}</textarea>
+  </div>
+</div>
+{% endblock %}

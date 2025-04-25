@@ -32,7 +32,7 @@ app = Starlette(
         WebSocketRoute("/ws", chat_websocket),
         WebSocketRoute("/ws/{project_id:int}", chat_websocket),
         WebSocketRoute("/ws/learn-more", LearnMoreChat.create_chat),
-        Mount("/static", app=StaticFiles(directory=Path(__file__).parent / "static"), name="static"),
+        Mount("/static", app=StaticFiles(directory=Path(__file__).parent.parent / "resources" / "static"), name="static"),
     ],
     exception_handlers={
         404: not_found,
