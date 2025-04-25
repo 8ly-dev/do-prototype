@@ -3,122 +3,126 @@ This module contains the WebSocket handler for the learn more page.
 """
 
 import asyncio
+from dataclasses import dataclass
+from typing import Literal, TypedDict
 
 import pydantic_ai
-import starlette
-from starlette.websockets import WebSocket
 
 from flowstate.agents import LearnMoreAgent, LearnMoreSuggestedActionsAgent
 from flowstate.auth import verify_access_token
-from flowstate.db_models import get_db
+from flowstate.chats.base_chat import BaseChat
+from flowstate.db_models import get_db, User
 from flowstate.chats.utils import clean_response
 
 
-async def learn_more_chat_websocket(websocket: WebSocket):
-    """
-    Handle WebSocket connections for the learn more page.
+class PromptData(TypedDict):
+    kind: Literal["prompt"]
+    prompt: str
 
-    This function sets up a LearnMoreAgent, sends the README content to the client,
-    and processes messages from the client. It also handles suggested actions and
-    tool usage messages.
 
-    Args:
-        websocket: The WebSocket connection
+@dataclass
+class ActionModel:
+    actions: list[str]
+    kind: Literal["action"] = "action"
 
-    Returns:
-        None
-    """
-    print("CONNECTING")
-    await websocket.accept()
-    closed = False
-    db = get_db()
-    session_token = websocket.cookies.get("SESSION_TOKEN")
-    user_id = verify_access_token(session_token) if session_token else None
-    user = db.get_user_by_id(user_id) if user_id else None
 
-    agent = LearnMoreAgent(user, websocket)
-    suggestion_agent = LearnMoreSuggestedActionsAgent()
-    await websocket.send_json(
-        {
-            "type": "command",
-            "command": "typing",
-        }
-    )
-    name = f" {user.username}" if user else ""
-    await websocket.send_json(
-        {
-            "type": "using",
-            "tool_message": f"Hi{name}, I'm thinking, one moment please",
-        }
-    )
-    actions, _ = await asyncio.gather(
-        suggestion_agent.send_prompt(f"AGENT:\n{agent.readme}"),
-        asyncio.sleep(2),
-    )
-    await websocket.send_json(
-        {
-            "type": "reply",
-            "reply": agent.readme,
-        }
-    )
-    await websocket.send_json(
-        {
-            "type": "actions",
-            "actions": actions.to_list(),
-        }
-    )
-    try:
-        while not closed:
-            try:
-                data = await websocket.receive_text()
-                try:
-                    response = await agent.send_prompt(data)
-                except pydantic_ai.exceptions.ModelHTTPError:
-                    await websocket.send_json(
-                        {
-                            "type": "reply",
-                            "reply": "I'm sorry, something went wrong. Please try again in a moment.",
-                        }
-                    )
-                    await websocket.send_json(
-                        {
-                            "type": "command",
-                            "command": "reload",
-                        }
-                    )
-                    raise
-                else:
-                    response = clean_response(response)
-                    await websocket.send_json(
-                        {
-                            "type": "reply",
-                            "reply": response,
-                        }
-                    )
-                    suggested_actions = await suggestion_agent.send_prompt(
+@dataclass
+class CommandModel:
+    command: str
+    kind: Literal["command"] = "command"
+
+
+@dataclass
+class ReplyModel:
+    reply: str
+    kind: Literal["reply"] = "reply"
+
+
+@dataclass
+class UsingModel:
+    tool_message: str
+    kind: Literal["using"] = "using"
+
+
+class LearnMoreChat(BaseChat):
+    def __init__(self, websocket):
+        super().__init__(websocket)
+        self.user = self._get_user()
+        self.agent = LearnMoreAgent(self.user, self)
+        self.suggestion_agent = LearnMoreSuggestedActionsAgent()
+        self._message_counter = 0
+        self._pending_tasks = []
+
+    async def on_connect(self):
+        # Let the user know we're connected
+        name = f" {self.user.username}" if self.user else ""
+        await self.send_json(CommandModel(command="typing"))
+        await self.send_json(
+            UsingModel(tool_message=f"Hi{name}, one moment please")
+        )
+
+        # Get the suggested questions
+        actions, _ = await asyncio.gather(
+            self.suggestion_agent.send_prompt(f"AGENT:\n{self.agent.readme}"),
+            asyncio.sleep(2),
+        )
+
+        # Send the readme and the actions
+        await self.send_json(ReplyModel(reply=self.agent.readme))
+        await self.send_json(ActionModel(actions=actions.to_list()))
+
+    async def prompt_handler(self, data: PromptData):
+        self._cancel_pending_tasks()
+        self._message_counter += 1
+        try:
+            response = await self.agent.send_prompt(data["prompt"])
+        except pydantic_ai.exceptions.ModelHTTPError:
+            await self.send_json(
+                ReplyModel(reply="I'm sorry, something went wrong. Please try again in a moment.")
+            )
+            await self.send_json(CommandModel(command="reload"))
+            raise
+        else:
+            response = clean_response(response)
+            self.send_json(ReplyModel(reply=response))
+            self._pending_tasks.append(
+                self.loop.create_task(
+                    self._send_suggested_actions(
                         f"USER:\n{data}\n"
                         f"AGENT:\n{response}\n"
                     )
-                    if suggested_actions:
-                        await websocket.send_json(
-                            {
-                                "type": "actions",
-                                "actions": suggested_actions.to_list(),
-                            }
-                        )
-
-            except pydantic_ai.exceptions.ModelHTTPError as e:
-                await websocket.send_json(
-                    {
-                        "type": "using",
-                        "tool_message": f"Oops, something went wrong. Please try again in a moment.",
-                    }
                 )
-                print(e)
+            )
 
-            except starlette.websockets.WebSocketDisconnect:
-                closed = True
+    async def send_using(self, using_message: str):
+        self.send_json(UsingModel(tool_message=using_message))
 
-    finally:
-        if not closed:
-            await websocket.close()
+    def _cancel_pending_tasks(self):
+        for task in self._pending_tasks:
+            task.cancel()
+
+        self._pending_tasks.clear()
+
+    def _get_user(self) -> User | None:
+        token = self.websocket.cookies.get("SESSION_TOKEN")
+        if not token:
+            return None
+
+        user_id = verify_access_token(token)
+        if user_id is None:
+            return None
+
+        return get_db().get_user_by_id(user_id)
+
+    async def _send_suggested_actions(self, prompt: str):
+        try:
+            suggested_actions = await self.suggestion_agent.send_prompt(prompt)
+        except pydantic_ai.exceptions.ModelHTTPError:
+            await self.send_json(
+                ReplyModel(reply="I'm sorry, something went wrong. Please try again in a moment.")
+            )
+            await self.send_json(CommandModel(command="reload"))
+            raise
+        else:
+            if suggested_actions:
+                await self.websocket.send_json(self._to_dict(ActionModel(actions=suggested_actions.to_list())))

@@ -4,11 +4,14 @@ This module contains the LearnMoreAgent class for providing information about th
 
 from itertools import chain
 from pathlib import Path
-
-from starlette.websockets import WebSocket
+from typing import TYPE_CHECKING
 
 from flowstate.agents.base_agent import Agent
 from flowstate.db_models import User
+
+
+if TYPE_CHECKING:
+    from flowstate.chats import LearnMoreChat
 
 
 class LearnMoreAgent(Agent):
@@ -46,7 +49,7 @@ class LearnMoreAgent(Agent):
     ALWAYS validate technical answers against the codebase.
 
     Whatever you do: NEVER EVER make anything up. All necessary information is available in the documents."""
-    def __init__(self, user: User | None, chat: WebSocket):
+    def __init__(self, user: User | None, chat: "LearnMoreChat"):
         """
         Initialize the LearnMoreAgent with user information and WebSocket connection.
 
@@ -78,7 +81,7 @@ class LearnMoreAgent(Agent):
     async def list_files(self) -> list[str]:
         """Activate this tool whenever you need to know what documents are available to you to answer the user's
         questions."""
-        await self._chat.send_json({"type": "using", "tool_message": "Listing files"})
+        await self._chat.send_using("Listing files")
         files = self._find_files()
         print("LISTING FILES", files)
         return files
@@ -87,7 +90,8 @@ class LearnMoreAgent(Agent):
         """Activate this tool whenever you need to read a document. Use the file path to locate the file. If the file
         doesn't exist, you'll get an error message back."""
         print(f"READING: {file_path}")
-        await self._chat.send_json({"type": "using", "tool_message": f"Reading {file_path.split('/')[-1]}"})
+        file_path = file_path.lower()
+        await self._chat.send_using(f"Reading {file_path.split('/')[-1]}")
         if file_path in self._file_cache:
             return self._file_cache[file_path]
 
