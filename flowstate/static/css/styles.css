@@ -38,6 +38,19 @@ hr {
   border-radius: 8px;
 }
 
+.input-area form button[type=submit]{
+  background-color: transparent;
+}
+
+.input-area form button[type=submit] svg path {
+  stroke: #9CA3AF;
+  transition: stroke 0.2s;
+}
+
+.input-area form button[type=submit]:hover svg path{
+  stroke: #6D28D9;
+}
+
 .example-snippet {
   cursor: pointer;
 }
