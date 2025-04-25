@@ -1,11 +1,11 @@
 /* Global styles */
 body {
   background-color: #1a1a1a;
-  color: #ffffff;
   background-image: linear-gradient(0deg, #1a1a1a, #101010);
   background-repeat: no-repeat;
   background-size: cover;
   background-attachment: fixed;
+  color: #9CA3AF;
 }
 
 hr {
