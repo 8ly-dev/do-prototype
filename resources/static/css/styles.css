@@ -14,8 +14,99 @@ hr {
   margin: 2rem 0!important;
 }
 
+/* Three-column layout */
+.layout-container {
+  display: flex;
+  flex-wrap: nowrap; /* Ensure columns stay on one line */
+  width: 100%;
+  height: 100vh;
+  overflow-x: hidden;
+}
+
+.left-column {
+  flex: 1;
+}
+
+.center-column {
+  flex: 0 0 auto; /* Prevents resizing */
+  min-width: 480px;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+}
+
+.right-column {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
 .sidebar {
-  width: 250px;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto; /* Allow scrolling if content is too long */
+}
+
+/* Hide left column below 960px */
+@media (max-width: 960px) {
+  .left-column {
+    display: none;
+  }
+
+  .layout-container {
+    justify-content: space-between; /* Better spacing */
+  }
+}
+
+/* Convert right column to menu below 720px */
+@media (max-width: 720px) {
+  .layout-container {
+    justify-content: center; /* Center the content */
+  }
+
+  .center-column {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  /* Right column becomes a slide-out menu from the left */
+  .right-column {
+    position: fixed;
+    top: 0;
+    left: 0; /* Changed from right to left */
+    width: 80%;
+    max-width: 300px;
+    height: 100vh;
+    transform: translateX(-100%); /* Changed from 100% to -100% */
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    background-color: #1a1a1a;
+  }
+
+  .right-column.show-menu {
+    transform: translateX(0);
+  }
+
+  /* Menu toggle button */
+  .menu-toggle {
+    display: none; /* Hidden by default, shown only on mobile */
+    position: fixed;
+    top: 10px;
+    left: 10px; /* Changed from right to left */
+    z-index: 1001;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: 50%;
+    padding: 10px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 720px) {
+    .menu-toggle {
+      display: block; /* Show only on mobile */
+    }
+  }
 }
 
 .project-link {

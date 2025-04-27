@@ -9,20 +9,22 @@
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body class="learn-more">
-<div class="flex flex-col h-screen">
-    <!-- Header Bar -->
-    <div class="w-full p-4 fixed top-0 left-0 z-20 header-bar">
-        <div class="max-w-3xl mx-auto flex justify-between items-center">
-            <a href="/" class="text-white hover:text-indigo-300 transition-colors text-xl font-semibold">Flowstate by
-                8ly</a>
-            <a href="/" class="text-white hover:text-indigo-300 transition-colors">Back to Demo</a>
-        </div>
-    </div>
+<div class="layout-container">
+    <!-- Left Column (Empty) -->
+    <div class="left-column"></div>
 
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col items-center px-4 md:px-8 pt-20">
-        <!-- Chat Area (centered on the page) -->
-        <div class="chat-area flex-1 w-full max-w-3xl">
+    <!-- Center Column (Chat) -->
+    <div class="center-column">
+        <!-- Header Bar -->
+        <div class="w-full p-4 fixed top-0 z-20 header-bar">
+            <div class="flex justify-between items-center">
+                <a href="/" class="text-white hover:text-indigo-300 transition-colors text-xl font-semibold">Flowstate by 8ly</a>
+                <a href="/" class="text-white hover:text-indigo-300 transition-colors">Back to Demo</a>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area flex-1 w-full pt-20 px-4">
             <div id="chat-messages" class="space-y-4">
                 <!-- Chat messages will be inserted here -->
             </div>
@@ -32,9 +34,8 @@
             </div>
         </div>
 
-
         <!-- Input Area -->
-        <div class="input-area w-full max-w-3xl mb-4">
+        <div class="input-area mb-4">
             <!-- Tool Messages Container -->
             <div id="tool-messages-container"></div>
             <form id="chat-form" class="flex items-center p-2">
@@ -44,7 +45,7 @@
                        class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none px-4 py-3"
                        autocomplete="off">
                 <button type="submit"
-                        class="w-10 h-10 rounded-lg flex items-center justify-center ml-2 transition-colors">
+                        class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center ml-2 hover:bg-indigo-700 transition-colors">
                     <svg class="w-6 h-6 text-white transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                     </svg>
@@ -52,8 +53,12 @@
             </form>
         </div>
     </div>
+
+    <!-- Right Column (Empty) -->
+    <div class="right-column"></div>
 </div>
 
 <script src="/static/js/chat.js"></script>
+<script src="/static/js/menu-toggle.js"></script>
 </body>
 </html>

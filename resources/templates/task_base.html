@@ -13,39 +13,12 @@
   {% block extra_styles %}{% endblock %}
 </head>
 <body class="task">
-  <div class="flex h-screen">
-    <!-- Sidebar -->
-    <div class="sidebar h-full flex flex-col">
-      <div class="p-6">
-        <h1 class="text-xl font-semibold mb-8">Projects</h1>
-        <nav>
-          <ul class="space-y-4">
-            {% if not projects %}
-            <li class="project-link">You don't have any projects right now</li>
-            {% else %}
-            {% for project in projects %}
-            <li>
-              {% set project_slug = project.name.lower().replace(" ", "-") %}
-              <a href="/project/{{ project_slug }}" 
-                 class="project-link {% if project.id == current_project.id %}active{% endif %}">
-                {{ project.name }}
-              </a>
-            </li>
-            {% endfor %}
-            {% endif %}
-          </ul>
-        </nav>
-      </div>
-      <div class="mt-auto p-6">
-        <a href="/" class="project-link">Dashboard</a>
-        <div class="mt-4">
-          <a href="/logout" class="project-link">Logout</a>
-        </div>
-      </div>
-    </div>
+  <div class="layout-container">
+    <!-- Left Column (Empty) -->
+    <div class="left-column"></div>
 
-    <!-- Main Content -->
-    <div class="flex-1 p-8 flex flex-col">
+    <!-- Center Column (Task Content) -->
+    <div class="center-column p-8 flex flex-col">
       <!-- Task Header -->
       <div class="mb-6">
         <h1 class="text-2xl font-bold">{{ task.title }}</h1>
@@ -72,6 +45,38 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Right Column (Projects) -->
+    <div class="right-column">
+      <div class="sidebar h-full flex flex-col">
+        <div class="p-6">
+          <h1 class="text-xl font-semibold mb-8">Projects</h1>
+          <nav>
+            <ul class="space-y-4">
+              {% if not projects %}
+              <li class="project-link">You don't have any projects right now</li>
+              {% else %}
+              {% for project in projects %}
+              <li>
+                {% set project_slug = project.name.lower().replace(" ", "-") %}
+                <a href="/project/{{ project_slug }}"
+                   class="project-link {% if project.id == current_project.id %}active{% endif %}">
+                  {{ project.name }}
+                </a>
+              </li>
+              {% endfor %}
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        <div class="mt-auto p-6">
+          <a href="/" class="project-link">Dashboard</a>
+          <div class="mt-4">
+            <a href="/logout" class="project-link">Logout</a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -124,7 +129,7 @@
           listButton.addEventListener('click', function(e) {
             e.preventDefault();
             const selection = markdownTextarea.value.substring(
-              markdownTextarea.selectionStart, 
+              markdownTextarea.selectionStart,
               markdownTextarea.selectionEnd
             );
 
@@ -163,9 +168,9 @@
       const selection = textarea.value.substring(start, end);
       const replacement = selection || placeholder;
 
-      textarea.value = 
-        textarea.value.substring(0, start) + 
-        prefix + replacement + suffix + 
+      textarea.value =
+        textarea.value.substring(0, start) +
+        prefix + replacement + suffix +
         textarea.value.substring(end);
 
       // Set cursor position
@@ -185,9 +190,9 @@
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
 
-      textarea.value = 
-        textarea.value.substring(0, start) + 
-        replacement + 
+      textarea.value =
+        textarea.value.substring(0, start) +
+        replacement +
         textarea.value.substring(end);
 
       // Set cursor position
@@ -203,5 +208,6 @@
     }
   </script>
   {% endblock %}
+  <script src="/static/js/menu-toggle.js"></script>
 </body>
 </html>

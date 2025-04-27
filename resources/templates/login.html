@@ -5,30 +5,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flowstate - Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="/static/css/styles.css">
 </head>
-<body class="login bg-black text-gray-100 min-h-screen flex items-center justify-center p-8">
-  <div class="max-w-md w-full mx-auto py-12 px-8">
-    <h1 class="text-3xl font-bold text-center mb-10 text-white">Welcome to Flowstate</h1>
-    <form action="/login" method="POST" class="space-y-6">
-      <div>
-        <label for="username" class="block text-base font-medium text-gray-300 mb-2">Username</label>
-        <input type="text" id="username" name="username" required
-               class="block w-full py-3 px-4 bg-zinc-900 border border-zinc-800 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
-               placeholder="Enter your username">
+<body class="login bg-black text-gray-100 min-h-screen">
+  <div class="layout-container">
+    <!-- Left Column (Empty) -->
+    <div class="left-column"></div>
+
+    <!-- Center Column (Chat) -->
+    <div class="center-column flex flex-col">
+      <h1 class="text-3xl font-bold text-center mt-10 mb-6 text-white">Welcome to Flowstate</h1>
+
+      <!-- Chat Area -->
+      <div class="chat-area flex-1 px-4">
+        <div id="chat-messages" class="space-y-4">
+          <!-- Initial system message -->
+          <div class="system-message markdown-content">
+            <p>Welcome to Flowstate! Please enter your username to continue.</p>
+          </div>
+        </div>
+        <div id="loading-indicator" class="loading-indicator">
+          <div class="loading-bar"></div>
+        </div>
       </div>
-      <div class="pt-4">
-        <button type="submit"
-                class="w-full py-3 px-4 border border-zinc-700 rounded-md text-base font-medium text-white bg-zinc-800 hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-white transition-colors duration-200">
-          Login
-        </button>
+
+      <!-- Input Area -->
+      <div class="input-area mb-8">
+        <form id="chat-form" class="flex items-center p-2" action="/login" method="POST">
+          <input type="text"
+                 id="chat-input"
+                 name="username"
+                 placeholder="Enter your username..."
+                 class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none px-4 py-3"
+                 autocomplete="off"
+                 required>
+          <button type="submit"
+                  class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center ml-2 hover:bg-indigo-700 transition-colors">
+            <svg class="w-6 h-6 text-white transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+          </button>
+        </form>
       </div>
-    </form>
-    <div class="mt-8 text-center">
-      <a href="/learn-more" class="text-indigo-400 hover:text-indigo-300 text-lg font-medium transition-colors duration-200">
-        Learn more about Flowstate
-      </a>
+
+      <div class="text-center mb-8">
+        <a href="/learn-more" class="text-indigo-400 hover:text-indigo-300 text-lg font-medium transition-colors duration-200">
+          Learn more about Flowstate
+        </a>
+      </div>
     </div>
+
+    <!-- Right Column (Empty) -->
+    <div class="right-column"></div>
   </div>
+
+  <script src="/static/js/menu-toggle.js"></script>
 </body>
 </html>
