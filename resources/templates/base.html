@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Flowstate{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}"{% block body_attributes %}{% endblock %}>
+  <div class="layout-container">
+    <!-- Left Column (Empty) -->
+    <div class="left-column">
+      {% block left_column %}{% endblock %}
+    </div>
+
+    <!-- Center Column (Chat) -->
+    <div class="center-column {% block center_column_class %}p-8{% endblock %} flex flex-col">
+      {% block header %}{% endblock %}
+
+      <!-- Main Content -->
+      {% block content %}{% endblock %}
+
+      <!-- Chat Area -->
+      <div class="chat-area {% block chat_area_class %}mb-6{% endblock %}">
+        <div id="chat-messages" class="space-y-4">
+          <!-- Chat messages will be inserted here -->
+          {% block initial_messages %}{% endblock %}
+        </div>
+        <div id="loading-indicator" class="loading-indicator">
+          <div class="loading-bar"></div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <form id="chat-form" class="flex items-center p-2" {% block form_attributes %}{% endblock %}>
+          <input type="text"
+                 id="chat-input"
+                 name="{% block input_name %}{% endblock %}"
+                 placeholder="{% block input_placeholder %}I need to...{% endblock %}"
+                 class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none px-4 py-3"
+                 autocomplete="off"
+                 {% block input_attributes %}{% endblock %}>
+          <button type="submit"
+                  class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center ml-2 hover:bg-indigo-700 transition-colors">
+            <svg class="w-6 h-6 text-white transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      {% block below_input %}{% endblock %}
+    </div>
+
+    <!-- Right Column (Projects) -->
+    <div class="right-column">
+      {% block right_column %}
+      <div class="sidebar h-full flex flex-col">
+        <div class="p-6">
+          <h1 class="text-xl font-semibold mb-8">Projects</h1>
+          <nav>
+            <ul class="space-y-4">
+              {% if not projects %}
+              <li class="project-link">You don't have any projects right now</li>
+              {% else %}
+              {% for project in projects %}
+              <li>
+                {% set project_slug = project.name.lower().replace(" ", "-") %}
+                <a href="/project/{{ project_slug }}"
+                   class="project-link {% if current_project and project.id == current_project.id %}active{% endif %}">
+                  {{ project.name }}
+                </a>
+              </li>
+              {% endfor %}
+              {% endif %}
+            </ul>
+          </nav>
+          {% block sidebar_content %}{% endblock %}
+        </div>
+        <div class="mt-auto p-6">
+          {% block navigation_links %}
+          <a href="/" class="project-link">Dashboard</a>
+          <div class="mt-4">
+            <a href="/learn-more" class="project-link">Learn More</a>
+          </div>
+          <div class="mt-4">
+            <a href="/logout" class="project-link">Logout</a>
+          </div>
+          {% endblock %}
+        </div>
+      </div>
+      {% endblock %}
+    </div>
+  </div>
+
+  <!-- Common Scripts -->
+  <script src="/static/js/chat.js"></script>
+  <script src="/static/js/menu-toggle.js"></script>
+
+  <!-- Page-specific Scripts -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>
