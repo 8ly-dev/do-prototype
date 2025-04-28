@@ -397,14 +397,6 @@ class FlowstateChat {
 
         // Add new message
         this.elements.chatMessages.appendChild(messageElement);
-
-        // Scroll to the bottom of the chat area smoothly, accounting for header height
-        const headerHeight = 64; // 4rem (16px * 4)
-        const scrollPosition = messageElement.offsetTop - headerHeight;
-        window.scrollTo({
-            top: scrollPosition,
-            behavior: 'smooth'
-        });
     }
 
     showLoadingIndicator() {
