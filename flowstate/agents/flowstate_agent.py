@@ -1,15 +1,15 @@
 """
-This module contains the TaskAgent class for managing tasks.
+This module contains the FlowstateAgent class for managing tasks within projects.
 """
 
 import re
-from typing import Literal, Type
+from typing import Literal, Optional, List, Dict, Any
 
 from flowstate.agents.base_agent import Agent
-from flowstate.db_models import get_db, Project, Task, TaskType, User
+from flowstate.db_models import get_db, Project, Task, User
 
 
-class TaskAgent[DT, OT](Agent[DT, OT]):
+class FlowstateAgent(Agent):
     """You don't have a name, you are the invisible coordinator for the app
     Flowstate, a human-first task management tool designed to feel like an
     innate extension of the user. Your purpose is to interpret users' natural
@@ -59,7 +59,7 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
     Natural, warm, and focused. Always prioritize clarity and helpfulness."""
     def __init__(self, user_id: int = 0, project: Project | None = None):
         """
-        Initialize the TaskAgent with user and project information.
+        Initialize the FlowstateAgent with user and project information.
 
         Args:
             user_id: The ID of the user
@@ -71,15 +71,12 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
 
         self.system_prompt = f"The current user is {self._user.username}.\n{self.system_prompt}"
         if project:
-            self.system_prompt += (
-                f"\n\nThe user is currently working on the project {project.name}. When a project is needed but not "
-                f"given, use the current project."
-            )
+            self.system_prompt += f"\n\nThe user is currently working in the project '{project.name}'. When a project is needed but not given, use the current project."
 
         self.project_id = project.id if project else None
         super().__init__()
 
-    async def send_prompt(self, prompt: str, *, deps: DT | None = None) -> OT:
+    async def send_prompt(self, prompt: str, *, deps=None):
         """
         Send a prompt to the agent and get a response with formatted examples.
 
@@ -100,14 +97,14 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
         self._examples.clear()
         return response
 
-    async def create_project(self, name: str) -> str:
+    async def create_project(self, name: str, description: str = None) -> str:
         """Creates a new project. Please ensure that project names are unique before calling this method. Convert
         names to title case for better user experience. If there's a similar project name, ask the user what they
         want to do."""
         if name in await self.get_project_names():
             return "Project name already exists."
 
-        project_id = self._db.insert_project(self._user.id, name)
+        project_id = self._db.insert_project(self._user.id, name, description)
         print(f"DB :: Created project {name} with ID {project_id}.")
         return f"Created project {name}."
 
@@ -120,7 +117,6 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
             self._db.delete_project(project.id)
             print(f"DB :: Deleted project {project_name} with ID {project.id}.")
             return f"Deleted project {project_name}."
-
         else:
             return "Project not found."
 
@@ -128,7 +124,7 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
         """Deletes a task. Look up the existing projects and use the name that most closely matches the user's
         request. Look up the existing tasks for that project and use the title that most closely matches the user's
         request. Make sure you have the names correct. Be very careful when deleting tasks. You should always confirm
-        the user's intent before deleting a project."""
+        the user's intent before deleting a task."""
         print(f"DB :: Received delete task request for {task_title} in {project_name}")
         project = await self._find_project_by_name(project_name)
         if not project:
@@ -142,14 +138,14 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
         print(f"DB :: Deleted task {task_title} in {project_name} with ID {task.id}.")
         return f"Deleted task {task_title}."
 
-
     async def create_task(
         self,
         project_name: str = None,
         title: str = None,
         description: str = None,
         due_date: str = None,
-        task_type: TaskType = "todo",
+        priority: int = 1,
+        task_type: str = "todo",
     ) -> str:
         """Creates a new task. Look up the existing projects and use the name that most closely matches the user's
         request. If the user isn't clear about the project, pick the most relevant project and use that."""
@@ -157,12 +153,11 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
         if project_name:
             if project := await self._find_project_by_name(project_name):
                 project_id = project.id
-
         elif self.project_id:
             project_id = self.project_id
 
         if project_id is not None:
-            task_id = self._db.insert_task(project_id, title, description, due_date, 1, task_type)
+            task_id = self._db.insert_task(project_id, title, description, due_date, priority, task_type)
             print(f"DB :: Created task {title} with ID {task_id}.")
             return f"Created task {title}."
 
@@ -200,9 +195,7 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
         for project in projects:
             if project.name.lower() == project_name.lower():
                 return project
-
-        else:
-            return None
+        return None
 
     async def _find_task_by_name(self, project_id: int, task_title: str) -> Task | None:
         """Helper method to find a task by name. Returns the task if found, or None otherwise."""
@@ -210,6 +203,4 @@ class TaskAgent[DT, OT](Agent[DT, OT]):
         for task in tasks:
             if task.title.lower() == task_title.lower():
                 return task
-
-        else:
-            return None
+        return None
