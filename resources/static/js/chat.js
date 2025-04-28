@@ -311,6 +311,8 @@ class FlowstateChat {
             return;
         }
 
+        const isScrolledToBottom = this.isScrolledToBottom();
+
         // Create a new suggested questions container to be placed after the last message
         const suggestedQuestionsContainer = document.createElement('div');
         suggestedQuestionsContainer.id = 'suggested-questions-inline';
@@ -347,6 +349,11 @@ class FlowstateChat {
         if (this.elements.suggestedQuestions) {
             this.elements.suggestedQuestions.classList.add('hide-suggestions');
         }
+
+        // If the page is fully scrolled down, scroll the suggested questions into view
+        if (isScrolledToBottom) {
+            this.scrollToNewMessage(suggestedQuestionsContainer);
+        }
     }
 
     addMessage(message, type) {
@@ -365,6 +372,17 @@ class FlowstateChat {
                     }
                 });
             }, 1000); // Match animation duration
+        }
+
+        // Check if we should scroll after adding the message
+        // For system messages, check if the page is scrolled to the bottom
+        let shouldScroll = false;
+        if (type === 'user') {
+            // Always scroll for user messages
+            shouldScroll = true;
+        } else {
+            // For system messages, check if the page is scrolled to the bottom
+            shouldScroll = this.isScrolledToBottom();
         }
 
         // Create new message element
@@ -397,6 +415,10 @@ class FlowstateChat {
 
         // Add new message
         this.elements.chatMessages.appendChild(messageElement);
+
+        // Scroll to the new message
+        if (shouldScroll)
+            this.scrollToNewMessage(messageElement);
     }
 
     showLoadingIndicator() {
@@ -419,6 +441,35 @@ class FlowstateChat {
 
     hideLoadingIndicator() {
         this.elements.loadingIndicator.style.display = 'none';
+    }
+
+    scrollToNewMessage(element) {
+        if (!element) return;
+
+        // Use setTimeout to ensure the DOM has updated
+        setTimeout(() => {
+            // Calculate position accounting for header height
+            const headerHeight = 64; // 4rem (16px * 4)
+            const scrollPosition = document.documentElement.scrollHeight - window.innerHeight;
+            // Scroll the window (page) to the new message
+            window.scrollTo({
+                top: scrollPosition,
+                behavior: 'smooth'
+            });
+        }, 50);
+    }
+
+    isScrolledToBottom() {
+        // Check if the page is scrolled to the bottom (with a small threshold)
+        const scrollPosition = window.scrollY + window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+
+        if (documentHeight === window.innerHeight)
+            return false;
+
+        // Consider "at bottom" if within 50px of the bottom
+        console.log(documentHeight, scrollPosition);
+        return documentHeight - scrollPosition <= 50;
     }
 
     addToolMessage(message) {

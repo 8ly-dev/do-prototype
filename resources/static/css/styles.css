@@ -19,7 +19,7 @@ hr {
   display: flex;
   flex-wrap: nowrap; /* Ensure columns stay on one line */
   width: 100%;
-  height: 100vh;
+  min-height: 100vh; /* Changed from height to min-height to allow scrolling */
   overflow-x: hidden;
 }
 
@@ -28,7 +28,7 @@ hr {
 }
 
 .center-column {
-  flex: 0 0 auto; /* Prevents resizing */
+  flex: 0 1 auto; /* Allow column to shrink but not grow beyond max-width */
   min-width: 480px;
   max-width: 720px;
   display: flex;
@@ -132,7 +132,8 @@ hr {
 }
 
 .chat-area {
-  overflow-y: auto;
+  /* Remove overflow-y to prevent scrollbar on chat area */
+  overflow-y: visible;
 }
 
 .input-area form {
@@ -519,7 +520,8 @@ body.task .task-card {
 /* Page-specific styles */
 /* Common chat area styles */
 .chat-area {
-  max-height: 300px;
+  /* Remove max-height to prevent scrollbar on chat area */
+  /* max-height: 300px; */
 }
 
 /* Dashboard page */
@@ -555,7 +557,8 @@ body.learn-more .center-column {
 body.learn-more .chat-area {
   flex: 1;
   padding-bottom: 5rem; /* Increased padding to account for fixed input area */
-  max-height: none; /* Override the common max-height */
+  /* max-height is already removed from common styles */
+  overflow-y: visible; /* Ensure overflow is visible */
 }
 
 body.learn-more .input-area {
