@@ -3,11 +3,20 @@ This module contains the base Agent class for the Flowstate application.
 """
 
 from datetime import UTC, datetime
+from functools import wraps
 from typing import Type
 
 from pydantic_ai import Agent as PydanticAgent
 
 from flowstate.agents.utils import get_model
+
+
+def tool(nice_name):
+    def decorator(func):
+        func.nice_name = nice_name
+        return func
+
+    return decorator
 
 
 class Agent[DT, OT: str]:
@@ -35,13 +44,14 @@ class Agent[DT, OT: str]:
     deps_type: Type[DT] | None = None
     output_type: OT | None = None
 
-    def __init__(self):
+    def __init__(self, report_tool = None):
         """
         Initialize the agent with an empty history and configure the underlying PydanticAgent.
 
         This sets up the agent with the appropriate system prompt, tools, and type information.
         """
         self.history = []
+        self._report_tool_func = report_tool
 
         kwargs = {}
         if self.deps_type:
@@ -52,7 +62,7 @@ class Agent[DT, OT: str]:
         self.agent = PydanticAgent(
             self.agent_factory(),
             system_prompt="Always format dates in a nice human format.\n" + self.system_prompt,
-            tools=[self.__current_date] + [getattr(self, name) for name in self.tools],
+            tools=[self.__current_date] + [self.__create_tool(name) for name in self.tools],
             **kwargs,
         )
 
@@ -75,6 +85,10 @@ class Agent[DT, OT: str]:
                 cls.tools.append(name)
 
         cls.system_prompt = cls.__doc__
+
+    async def _report_tool(self, tool_name: str):
+        if self._report_tool_func:
+            await self._report_tool_func(tool_name)
 
     async def send_prompt(self, prompt: str, *, deps: DT | None = None, output_type: Type[OT] | None = None) -> OT:
         """
@@ -101,6 +115,22 @@ class Agent[DT, OT: str]:
         response = await self.agent.run(prompt, message_history=self.history, **kwargs)
         self.history.extend(response.new_messages())
         return response.output
+
+    def __create_tool(self, attr_name):
+        tool = getattr(self, attr_name)
+
+        @wraps(tool)
+        async def run_tool(*args, **kwargs):
+            name_callable = getattr(tool, "nice_name", attr_name)
+            if isinstance(name_callable, str):
+                name_callable = name_callable.format
+
+            await self._report_tool(
+                name_callable(*args, **kwargs)
+            )
+            return await tool(*args, **kwargs)
+
+        return run_tool
 
     async def __current_date(self) -> str:
         """Helper method to get the current date UTC in the format YYYY-MM-DD."""

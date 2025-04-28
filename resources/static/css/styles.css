@@ -580,15 +580,16 @@ body.learn-more .system-message + .system-message {
   padding-top: 2rem;
 }
 
-body.learn-more #tool-messages-container {
+/* Tool messages container styles */
+#tool-messages-container {
   position: relative;
-  top: -100%;
-  left: 0;
+  width: 100%;
   z-index: 9;
   pointer-events: none;
+  min-height: 2rem; /* Ensure container has height even when empty */
 }
 
-body.learn-more .tool-message {
+.tool-message {
   font-weight: bold;
   padding: 0.5rem 1.25rem;
   color: #a0a0a0;
@@ -597,15 +598,15 @@ body.learn-more .tool-message {
   text-align: left;
 }
 
-body.learn-more .tool-message-fade-out {
+.tool-message-fade-out {
   animation: fadeOut 500ms ease-out forwards;
 }
 
-body.learn-more .tool-message-fade-out:has(+ .tool-message) {
+.tool-message-fade-out:has(+ .tool-message) {
   animation: toolSlideUpFadeOut 500ms ease-out forwards;
 }
 
-body.learn-more .tool-message-fade-in {
+.tool-message-fade-in {
   animation-delay: 250ms;
   animation: slideRightFadeIn 500ms ease-in forwards;
 }

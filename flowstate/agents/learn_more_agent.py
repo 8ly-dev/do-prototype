@@ -6,7 +6,7 @@ from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from flowstate.agents.base_agent import Agent
+from flowstate.agents.base_agent import Agent, tool
 from flowstate.db_models import User
 
 
@@ -72,20 +72,22 @@ class LearnMoreAgent(Agent):
         self._file_cache = {}
         self._path_cache = []
         self._root = Path(__file__).parent.parent.parent
-        super().__init__()
+        super().__init__(self._chat.send_using)
 
+    @tool("Creating GitHub Link")
     async def create_github_link(self, file_path: str) -> str:
         """Creates a link to the file on GitHub."""
         return f"https://github.com/8ly-dev/flowstate-prototype/blob/main/{file_path}"
 
+    @tool("Listing Files")
     async def list_files(self) -> list[str]:
         """Activate this tool whenever you need to know what documents are available to you to answer the user's
         questions."""
-        await self._chat.send_using("Listing files")
         files = self._find_files()
         print("LISTING FILES", files)
         return files
 
+    @tool(lambda file_path: f"Reading File {file_path.split('/')[-1]}")
     async def read_file(self, file_path: str):
         """Activate this tool whenever you need to read a document. Use the file path to locate the file. If the file
         doesn't exist, you'll get an error message back."""
