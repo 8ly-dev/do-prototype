@@ -4,6 +4,8 @@
 
 {% block body_class %}project{% endblock %}
 
+{% block websocket_path %}/ws/{{ current_project.id }}{% endblock %}
+
 {% block body_attributes %} data-project-id="{{ current_project.id }}"{% endblock %}
 
 {% block header %}
@@ -102,3 +104,18 @@
   <a href="/logout" class="project-link">Logout</a>
 </div>
 {% endblock %}
+
+{% block placeholders %}[
+  "Let's do...",
+  "I want to...",
+  "Remind me to...",
+  "Schedule...",
+  "Start working on...",
+  "Don't forget to...",
+  "Add a task to...",
+  "Plan to...",
+  "Set up...",
+  "Finish...",
+  "Organize...",
+  "Help me with..."
+]{% endblock %}

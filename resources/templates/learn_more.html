@@ -4,6 +4,11 @@
 
 {% block body_class %}learn-more{% endblock %}
 
+{% block websocket_path %}/ws/learn-more{% endblock %}
+
+{% block support_suggested_questions %}true{% endblock %}
+{% block support_tool_messages %}true{% endblock %}
+
 {% block center_column_class %}{% endblock %}
 
 {% block header %}
@@ -20,4 +25,21 @@
 
 {% block input_placeholder %}Ask about Flowstate...{% endblock %}
 
-{% block right_column %}{% endblock %}
+{% block right_column %}
+<div id="suggested-questions" class="suggested-questions"></div>
+{% endblock %}
+
+{% block placeholders %}[
+  "What is Flowstate?",
+  "How do I create a project?",
+  "Tell me about task management...",
+  "How can I get started?",
+  "What features does Flowstate have?",
+  "How do I use the chat?",
+  "Can you explain how this works?",
+  "What can you help me with?",
+  "Tell me more about...",
+  "How do I organize my tasks?",
+  "What's the best way to use Flowstate?",
+  "I want to learn about..."
+]{% endblock %}

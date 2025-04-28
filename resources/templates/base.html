@@ -101,6 +101,26 @@
   <script src="/static/js/chat.js"></script>
   <script src="/static/js/menu-toggle.js"></script>
 
+  <!-- Initialize chat with appropriate options -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Default options
+      let chatOptions = {
+        websocketPath: '{% block websocket_path %}/ws{% endblock %}',
+        placeholders: {% block placeholders %}[
+          "I need to...",
+          "Let's do...",
+          "I want to..."
+        ]{% endblock %},
+        supportSuggestedQuestions: {% block support_suggested_questions %}false{% endblock %},
+        supportToolMessages: {% block support_tool_messages %}false{% endblock %}
+      };
+
+      // Create a new instance of FlowstateChat with the appropriate options
+      window.flowstateChat = new FlowstateChat(chatOptions);
+    });
+  </script>
+
   <!-- Page-specific Scripts -->
   {% block scripts %}{% endblock %}
 </body>

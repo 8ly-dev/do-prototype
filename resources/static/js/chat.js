@@ -1,6 +1,6 @@
 /**
  * Flowstate Chat Interface
- * 
+ *
  * This module provides a reusable chat interface for Flowstate.
  * It handles WebSocket connections, message display, and user interactions.
  */
@@ -12,7 +12,7 @@ class FlowstateChat {
         this.options = {
             // WebSocket path - can be overridden for different pages
             websocketPath: '/ws',
-            
+
             // Placeholders for the input field
             placeholders: [
                 "Let's do...",
@@ -22,22 +22,21 @@ class FlowstateChat {
                 "Start working on...",
                 "Don't forget to..."
             ],
-            
+
             // Interval for changing placeholders
             placeholderInterval: 30000, // 30 seconds
-            
+
             // Whether to fade out old messages when a new one is added
             fadeOutOldMessages: false,
-            
-            // Whether to use the complex message handling (for learn_more page)
-            useComplexMessageHandling: false,
-            
+
+            // Complex message handling is now used for all pages
+
             // Whether to support suggested questions/actions
             supportSuggestedQuestions: false,
-            
+
             // Whether to support tool messages
             supportToolMessages: false,
-            
+
             // Override with any provided options
             ...options
         };
@@ -59,13 +58,13 @@ class FlowstateChat {
     init() {
         // Set up event listeners
         this.setupEventListeners();
-        
+
         // Set initial placeholder
         this.updatePlaceholder();
-        
+
         // Change placeholder periodically
         setInterval(() => this.updatePlaceholder(), this.options.placeholderInterval);
-        
+
         // Create WebSocket connection
         this.connectWebSocket();
     }
@@ -73,10 +72,10 @@ class FlowstateChat {
     setupEventListeners() {
         // Form submission
         this.elements.chatForm.addEventListener('submit', (event) => this.handleFormSubmit(event));
-        
+
         // Global keyboard events for focusing input
         document.addEventListener('keydown', (event) => this.handleKeydown(event));
-        
+
         // Task completion buttons (if they exist)
         this.setupTaskCompletionButtons();
     }
@@ -84,11 +83,11 @@ class FlowstateChat {
     setupTaskCompletionButtons() {
         // Find all task completion buttons
         const completeTaskButtons = document.querySelectorAll('.complete-task-button');
-        
+
         if (completeTaskButtons.length > 0) {
             completeTaskButtons.forEach(button => {
                 button.addEventListener('click', (event) => this.handleTaskCompletion(event));
-                
+
                 // Add keyboard support for task completion
                 button.addEventListener('keydown', (event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
@@ -117,7 +116,7 @@ class FlowstateChat {
 
         // Handle different behaviors based on context
         const taskCard = button.closest('.task-card');
-        
+
         if (taskCard) {
             // Project page behavior - remove the task card after animation
             setTimeout(() => {
@@ -171,23 +170,23 @@ class FlowstateChat {
     connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         let path = this.options.websocketPath;
-        
+
         // Check if we're on a project page and need to include the project ID
         const projectId = document.body.getAttribute('data-project-id');
         if (projectId && path === '/ws') {
             path = `/ws/${projectId}`;
         }
-        
+
         this.socket = new WebSocket(`${protocol}//${window.location.host}${path}`);
-        
+
         // Connection opened
         this.socket.addEventListener('open', () => {
             console.log('Connected to WebSocket server');
         });
-        
+
         // Listen for messages
         this.socket.addEventListener('message', (event) => this.handleSocketMessage(event));
-        
+
         // Connection closed
         this.socket.addEventListener('close', () => {
             console.log('Disconnected from WebSocket server');
@@ -197,7 +196,7 @@ class FlowstateChat {
             }
             this.addMessage('Connection closed. Please refresh the page to reconnect.', 'system');
         });
-        
+
         // Connection error
         this.socket.addEventListener('error', (event) => {
             console.error('WebSocket error:', event);
@@ -210,48 +209,58 @@ class FlowstateChat {
     }
 
     handleSocketMessage(event) {
-        if (this.options.useComplexMessageHandling) {
-            // Complex message handling (for learn_more page)
-            try {
-                const data = JSON.parse(event.data);
-                
-                switch (data.kind) {
-                    case 'command':
-                        if (data.command === 'typing') {
-                            this.showLoadingIndicator();
-                        }
-                        break;
-                    case 'reply':
+        // Complex message handling for all pages
+        try {
+            const data = JSON.parse(event.data);
+
+            switch (data.kind) {
+                case 'command':
+                    if (data.command === 'typing') {
+                        this.showLoadingIndicator();
+                    } else if (data.command === 'login_success') {
+                        // Handle login success
                         this.hideLoadingIndicator();
-                        this.addMessage(data.reply, 'system');
-                        if (this.options.supportToolMessages) {
-                            this.fadeOutAllToolMessages();
+
+                        // Set the session token as a cookie
+                        if (data.token) {
+                            document.cookie = `SESSION_TOKEN=${data.token}; path=/; max-age=2592000`; // 30 days
                         }
-                        break;
-                    case 'action':
-                        if (this.options.supportSuggestedQuestions) {
-                            this.addActions(data.actions);
-                        }
-                        break;
-                    case 'using':
-                        if (this.options.supportToolMessages) {
-                            console.log("Using " + data.tool_message);
-                            this.addToolMessage(data.tool_message);
-                        }
-                        break;
-                    default:
-                        console.log(data);
-                        throw new Error(`Unknown message type: ${data}`);
-                }
-            } catch (error) {
-                // If parsing fails, treat it as a simple message
-                this.hideLoadingIndicator();
-                this.addMessage(event.data, 'system');
+
+                        window.login_success = true;
+                    }
+                    break;
+                case 'reply':
+                    this.hideLoadingIndicator();
+                    this.addMessage(data.reply, 'system');
+                    if (this.options.supportToolMessages) {
+                        this.fadeOutAllToolMessages();
+                    }
+                    if(window.login_success) {
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 5000);
+                    }
+                    break;
+                case 'action':
+                    if (this.options.supportSuggestedQuestions) {
+                        this.addActions(data.actions);
+                    }
+                    break;
+                case 'using':
+                    if (this.options.supportToolMessages) {
+                        console.log("Using " + data.tool_message);
+                        this.addToolMessage(data.tool_message);
+                    }
+                    break;
+                default:
+                    console.log(data);
+                    console.warn(`Unknown message kind: ${data.kind}`);
             }
-        } else {
-            // Simple message handling (for dashboard and project pages)
+        } catch (error) {
+            // Legacy format support - if parsing fails, treat it as a simple message
+            console.warn('Message not in JSON format, treating as legacy format:', error);
             const message = event.data;
-            
+
             if (message === "!!COMMAND: typing!!") {
                 this.showLoadingIndicator();
             } else {
@@ -266,20 +275,14 @@ class FlowstateChat {
         const message = this.elements.chatInput.value.trim();
 
         if (message) {
-            // For learn_more page, show the user message
-            if (this.options.useComplexMessageHandling) {
-                this.addMessage(message, 'user');
-            }
+            // Show the user's message
+            this.addMessage(message, 'user');
 
-            // Send message to server
-            if (this.options.useComplexMessageHandling) {
-                this.socket.send(JSON.stringify({
-                    kind: 'prompt',
-                    prompt: message
-                }));
-            } else {
-                this.socket.send(message);
-            }
+            // Send message to server using structured format
+            this.socket.send(JSON.stringify({
+                kind: 'prompt',
+                prompt: message
+            }));
 
             // Show loading indicator
             this.showLoadingIndicator();
@@ -290,22 +293,31 @@ class FlowstateChat {
     }
 
     sendSuggestedQuestion(question) {
+        // Show the user's message
+        this.addMessage(question, 'user');
+
+        // Show loading indicator
         this.showLoadingIndicator();
-        this.socket.send(question);
+
+        // Send message to server using structured format
+        this.socket.send(JSON.stringify({
+            kind: 'prompt',
+            prompt: question
+        }));
     }
 
     addActions(actions) {
         if (!this.options.supportSuggestedQuestions || !this.elements.suggestedQuestions) {
             return;
         }
-        
+
         const { suggestedQuestions } = this.elements;
         suggestedQuestions.innerHTML = "";
-        
+
         actions.forEach(action => {
             suggestedQuestions.innerHTML += `<a href="#">${action}</a>`;
         });
-        
+
         document.querySelectorAll('#suggested-questions a').forEach(element => {
             element.addEventListener('click', event => {
                 let text = event.target.innerText;
@@ -319,7 +331,7 @@ class FlowstateChat {
                 return false;
             });
         });
-        
+
         suggestedQuestions.classList.remove('hide-suggestions');
         void suggestedQuestions.offsetWidth;
     }
@@ -331,7 +343,7 @@ class FlowstateChat {
             existingMessages.forEach(msg => {
                 msg.classList.add('message-fade-out');
             });
-            
+
             // Remove old messages after animation completes
             setTimeout(() => {
                 existingMessages.forEach(msg => {
@@ -357,7 +369,7 @@ class FlowstateChat {
 
             // Parse markdown to HTML
             const htmlContent = marked.parse(message);
-            
+
             // Add content wrapper div for learn_more page
             if (this.options.useComplexMessageHandling) {
                 messageElement.innerHTML = `<div class="content">${htmlContent}</div>`;
@@ -384,7 +396,7 @@ class FlowstateChat {
 
     showLoadingIndicator() {
         this.elements.loadingIndicator.style.display = 'block';
-        
+
         if (this.options.supportSuggestedQuestions && this.elements.suggestedQuestions) {
             this.elements.suggestedQuestions.classList.add('hide-suggestions');
         }
@@ -398,7 +410,7 @@ class FlowstateChat {
         if (!this.options.supportToolMessages || !this.elements.toolMessagesContainer) {
             return;
         }
-        
+
         // Make existing tool messages slide up and fade out
         this.fadeOutAllToolMessages();
 
@@ -419,7 +431,7 @@ class FlowstateChat {
         if (!this.options.supportToolMessages || !this.elements.toolMessagesContainer) {
             return;
         }
-        
+
         const toolMessages = this.elements.toolMessagesContainer.querySelectorAll('.tool-message');
         toolMessages.forEach(msg => {
             msg.classList.remove('tool-message-fade-in');
@@ -439,77 +451,5 @@ function fillTextarea(linkElement) {
     document.getElementById("chat-input").value = linkElement.textContent || linkElement.innerText;
 }
 
-// Initialize the chat interface when the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Determine which page we're on and configure the chat accordingly
-    let chatOptions = {};
-    
-    // Check if we're on the learn_more page
-    if (document.body.classList.contains('learn-more')) {
-        chatOptions = {
-            websocketPath: '/ws/learn-more',
-            placeholders: [
-                "What is Flowstate?",
-                "How do I create a project?",
-                "Tell me about task management...",
-                "How can I get started?",
-                "What features does Flowstate have?",
-                "How do I use the chat?",
-                "Can you explain how this works?",
-                "What can you help me with?",
-                "Tell me more about...",
-                "How do I organize my tasks?",
-                "What's the best way to use Flowstate?",
-                "I want to learn about..."
-            ],
-            useComplexMessageHandling: true,
-            supportSuggestedQuestions: true,
-            supportToolMessages: true
-        };
-    } 
-    // Check if we're on the dashboard page
-    else if (document.body.classList.contains('dashboard')) {
-        chatOptions = {
-            websocketPath: '/ws',
-            placeholders: [
-                "Let's do...",
-                "I want to...",
-                "Remind me to...",
-                "Schedule...",
-                "Start working on...",
-                "Don't forget to...",
-                "Add a task to...",
-                "Plan to...",
-                "Set up...",
-                "Finish...",
-                "Organize...",
-                "Help me with..."
-            ],
-            fadeOutOldMessages: true
-        };
-    }
-    // Check if we're on a project page
-    else if (document.body.classList.contains('project')) {
-        chatOptions = {
-            websocketPath: '/ws',  // The project ID will be added automatically
-            placeholders: [
-                "Let's do...",
-                "I want to...",
-                "Remind me to...",
-                "Schedule...",
-                "Start working on...",
-                "Don't forget to...",
-                "Add a task to...",
-                "Plan to...",
-                "Set up...",
-                "Finish...",
-                "Organize...",
-                "Help me with..."
-            ],
-            fadeOutOldMessages: true
-        };
-    }
-    
-    // Create a new instance of FlowstateChat with the appropriate options
-    window.flowstateChat = new FlowstateChat(chatOptions);
-});
+// Note: Chat is now initialized in the base template
+// The auto-initialization below has been removed to prevent double connections
