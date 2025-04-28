@@ -88,6 +88,14 @@ hr {
     transform: translateX(0);
   }
 
+  /* Ensure learn more page center column is responsive */
+  body.learn-more .center-column {
+    min-width: 100%;
+    max-width: 100%;
+    padding: 0.5rem;
+  }
+}
+
   /* Menu toggle button */
   .menu-toggle {
     display: none; /* Hidden by default, shown only on mobile */
@@ -529,6 +537,21 @@ body.project .task-card {
 }
 
 /* Learn More page */
+body.learn-more .layout-container {
+  justify-content: center; /* Center the layout */
+}
+
+body.learn-more .left-column,
+body.learn-more .right-column {
+  display: none; /* Hide side columns on learn more page */
+}
+
+body.learn-more .center-column {
+  margin: 0 auto; /* Center the column */
+  min-width: 480px;
+  max-width: 720px;
+}
+
 body.learn-more .chat-area {
   flex: 1;
   padding-bottom: 5rem; /* Increased padding to account for fixed input area */
@@ -584,7 +607,8 @@ body.learn-more .tool-message-fade-in {
   animation: slideRightFadeIn 500ms ease-in forwards;
 }
 
-body.learn-more #suggested-questions {
+/* Suggested questions - both sidebar and inline */
+#suggested-questions, .suggested-questions-inline {
   padding: 0.75rem;
   opacity: 1;
   visibility: visible;
@@ -592,13 +616,28 @@ body.learn-more #suggested-questions {
   transition-delay: 1.5s;
 }
 
-body.learn-more #suggested-questions.hide-suggestions {
+#suggested-questions.hide-suggestions {
   opacity: 0;
   visibility: hidden;
   transition-delay: 0s;
 }
 
-body.learn-more #suggested-questions a {
+/* Inline suggested questions specific styles */
+.suggested-questions-inline {
+  margin: 0.5rem 0 1.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  animation: fadeIn 0.5s ease-in-out;
+  width: 100%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Styling for both sidebar and inline suggested question links */
+#suggested-questions a, .suggested-questions-inline a {
   border-color: #6a6a6a;
   border-radius: 999em;
   border-width: 1px;
@@ -611,7 +650,7 @@ body.learn-more #suggested-questions a {
   position: relative;
 }
 
-body.learn-more #suggested-questions a:hover {
+#suggested-questions a:hover, .suggested-questions-inline a:hover {
   border-color: #ffffff;
   color: #ffffff;
 }

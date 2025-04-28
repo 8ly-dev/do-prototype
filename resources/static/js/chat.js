@@ -307,19 +307,21 @@ class FlowstateChat {
     }
 
     addActions(actions) {
-        if (!this.options.supportSuggestedQuestions || !this.elements.suggestedQuestions) {
+        if (!this.options.supportSuggestedQuestions) {
             return;
         }
 
-        const { suggestedQuestions } = this.elements;
-        suggestedQuestions.innerHTML = "";
+        // Create a new suggested questions container to be placed after the last message
+        const suggestedQuestionsContainer = document.createElement('div');
+        suggestedQuestionsContainer.id = 'suggested-questions-inline';
+        suggestedQuestionsContainer.className = 'suggested-questions-inline';
 
+        // Add the suggested questions to the container
         actions.forEach(action => {
-            suggestedQuestions.innerHTML += `<a href="#">${action}</a>`;
-        });
-
-        document.querySelectorAll('#suggested-questions a').forEach(element => {
-            element.addEventListener('click', event => {
+            const questionLink = document.createElement('a');
+            questionLink.href = '#';
+            questionLink.textContent = action;
+            questionLink.addEventListener('click', event => {
                 let text = event.target.innerText;
                 this.addMessage(text, 'user');
                 this.showLoadingIndicator();
@@ -330,10 +332,21 @@ class FlowstateChat {
                 event.preventDefault();
                 return false;
             });
+            suggestedQuestionsContainer.appendChild(questionLink);
         });
 
-        suggestedQuestions.classList.remove('hide-suggestions');
-        void suggestedQuestions.offsetWidth;
+        // Add the container after the last message
+        const lastMessage = this.elements.chatMessages.lastElementChild;
+        if (lastMessage) {
+            lastMessage.after(suggestedQuestionsContainer);
+        } else {
+            this.elements.chatMessages.appendChild(suggestedQuestionsContainer);
+        }
+
+        // If we still have the old suggested questions element in the sidebar, hide it
+        if (this.elements.suggestedQuestions) {
+            this.elements.suggestedQuestions.classList.add('hide-suggestions');
+        }
     }
 
     addMessage(message, type) {
@@ -397,8 +410,18 @@ class FlowstateChat {
     showLoadingIndicator() {
         this.elements.loadingIndicator.style.display = 'block';
 
-        if (this.options.supportSuggestedQuestions && this.elements.suggestedQuestions) {
-            this.elements.suggestedQuestions.classList.add('hide-suggestions');
+        // Hide both inline and sidebar suggested questions when loading
+        if (this.options.supportSuggestedQuestions) {
+            // Hide sidebar suggested questions if they exist
+            if (this.elements.suggestedQuestions) {
+                this.elements.suggestedQuestions.classList.add('hide-suggestions');
+            }
+
+            // Hide inline suggested questions
+            const inlineSuggestions = document.getElementById('suggested-questions-inline');
+            if (inlineSuggestions) {
+                inlineSuggestions.remove();
+            }
         }
     }
 
