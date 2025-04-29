@@ -47,6 +47,7 @@ class LearnMoreAgent(Agent):
 
     ALWAYS surface information relevant to the user's question to avoid the need for followup questions.
     ALWAYS validate technical answers against the codebase.
+    NEVER guess about technical details (tech stack, languages used, technologies planned, etc.), always refer to the documents.
 
     Whatever you do: NEVER EVER make anything up. All necessary information is available in the documents."""
     def __init__(self, user: User | None, chat: "LearnMoreChat"):
