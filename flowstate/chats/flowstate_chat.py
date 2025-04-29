@@ -67,7 +67,6 @@ class FlowstateChat(BaseChat):
         self.project = None
         self.agent = None
         self.nudge_task = None
-        self.nudge_delay = 5 * 60  # 5 minutes
 
     async def on_connect(self):
         """Handle the initial connection setup."""
@@ -117,7 +116,7 @@ class FlowstateChat(BaseChat):
     async def nudge_user(self):
         """Send a nudge message to inactive users."""
         try:
-            await asyncio.sleep(self.nudge_delay)
+            await asyncio.sleep(random.randint(60, 300))
 
             # Show typing indicator
             await self.send_json(CommandModel(command="typing"))
@@ -130,8 +129,6 @@ class FlowstateChat(BaseChat):
             # Send nudge message
             await self.send_json(ReplyModel(reply=nudge_message))
 
-            # Schedule next nudge with random delay
-            self.nudge_delay = random.randint(60, 300)  # 1-5 minutes
             self.nudge_task = self.loop.create_task(self.nudge_user())
         except asyncio.CancelledError:
             # Task was cancelled, which is expected when user interacts
