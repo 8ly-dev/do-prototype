@@ -5,7 +5,9 @@ This module contains the FlowstateAgent class for managing tasks within projects
 import re
 from typing import Literal, Optional, List, Dict, Any
 
-from flowstate.agents.base_agent import Agent
+from starlette.websockets import WebSocket
+
+from flowstate.agents.base_agent import Agent, tool
 from flowstate.db_models import get_db, Project, Task, User
 
 
@@ -57,24 +59,28 @@ class FlowstateAgent(Agent):
 
     Tone:
     Natural, warm, and focused. Always prioritize clarity and helpfulness."""
-    def __init__(self, user_id: int = 0, project: Project | None = None):
+    def __init__(self, user_id: int = 0, project: Project | None = None, chat = None):
         """
         Initialize the FlowstateAgent with user and project information.
 
         Args:
             user_id: The ID of the user
             project: Optional project that the user is currently working on
+            chat: Optional chat instance for reporting tool usage
         """
         self._db = get_db()
         self._user = self._db.get_user_by_id(user_id)
         self._examples = {}
+        self._chat = chat
 
         self.system_prompt = f"The current user is {self._user.username}.\n{self.system_prompt}"
         if project:
             self.system_prompt += f"\n\nThe user is currently working in the project '{project.name}'. When a project is needed but not given, use the current project."
 
         self.project_id = project.id if project else None
-        super().__init__()
+        # Pass the send_using method to the base agent if chat is provided
+        report_tool = self._chat.send_using if self._chat else None
+        super().__init__(report_tool)
 
     async def send_prompt(self, prompt: str, *, deps=None):
         """
@@ -97,6 +103,7 @@ class FlowstateAgent(Agent):
         self._examples.clear()
         return response
 
+    @tool("Creating Project {0}")
     async def create_project(self, name: str, description: str = None) -> str:
         """Creates a new project. Please ensure that project names are unique before calling this method. Convert
         names to title case for better user experience. If there's a similar project name, ask the user what they
@@ -108,6 +115,7 @@ class FlowstateAgent(Agent):
         print(f"DB :: Created project {name} with ID {project_id}.")
         return f"Created project {name}."
 
+    @tool("Deleting Project {0}")
     async def delete_project(self, project_name: str) -> str:
         """Deletes a project. Look up the existing projects and use the name that most closely matches the user's
         request. Make sure you have the name correct. Be very careful when deleting projects. You should always
@@ -120,6 +128,7 @@ class FlowstateAgent(Agent):
         else:
             return "Project not found."
 
+    @tool("Deleting Task {1} from Project {0}")
     async def delete_task_from_project(self, project_name: str, task_title: str) -> str:
         """Deletes a task. Look up the existing projects and use the name that most closely matches the user's
         request. Look up the existing tasks for that project and use the title that most closely matches the user's
@@ -138,6 +147,7 @@ class FlowstateAgent(Agent):
         print(f"DB :: Deleted task {task_title} in {project_name} with ID {task.id}.")
         return f"Deleted task {task_title}."
 
+    @tool("Creating Task {project_name} in Project {title}")
     async def create_task(
         self,
         project_name: str = None,
@@ -163,12 +173,14 @@ class FlowstateAgent(Agent):
 
         return "Project not found."
 
+    @tool("Getting Available Projects")
     async def get_project_names(self) -> list[str]:
         """Returns a list of project names for the current user."""
         projects = self._db.get_projects_by_user(self._user.id)
         print(f"DB :: Retrieved {len(projects)} projects for user {self._user.id}.")
         return [project.name for project in projects]
 
+    @tool("Getting Available Tasks in Project {0}")
     async def get_task_titles(self, project_name: str) -> list[str] | Literal["Project not found."]:
         """Returns a list of task titles in the requested project. If the project doesn't exist, returns an error
         message."""
@@ -180,6 +192,7 @@ class FlowstateAgent(Agent):
         print(f"DB :: Retrieved {len(tasks)} tasks in {project_name} for user {self._user.id}.")
         return [task.title for task in tasks]
 
+    @tool("Creating Example")
     async def example_formatter(self, example: str) -> str:
         """Format an example in the final output to the user."""
         print(f"FORMATTING EXAMPLE: {example}")
