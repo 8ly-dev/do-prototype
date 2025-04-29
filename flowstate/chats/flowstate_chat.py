@@ -139,6 +139,7 @@ class FlowstateChat(BaseChat):
 
     async def send_using(self, tool_message: str):
         """Send a tool usage message to the client."""
+        print(f"USING: {tool_message}")
         await self.send_json(UsingModel(tool_message=tool_message))
 
     async def prompt_handler(self, data: PromptData):

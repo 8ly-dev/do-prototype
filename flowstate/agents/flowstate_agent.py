@@ -103,19 +103,19 @@ class FlowstateAgent(Agent):
         self._examples.clear()
         return response
 
-    @tool("Creating Project {0}")
-    async def create_project(self, name: str, description: str = None) -> str:
+    @tool("Creating Project {name}")
+    async def create_project(self, name: str) -> str:
         """Creates a new project. Please ensure that project names are unique before calling this method. Convert
         names to title case for better user experience. If there's a similar project name, ask the user what they
         want to do."""
         if name in await self.get_project_names():
             return "Project name already exists."
 
-        project_id = self._db.insert_project(self._user.id, name, description)
+        project_id = self._db.insert_project(self._user.id, name)
         print(f"DB :: Created project {name} with ID {project_id}.")
         return f"Created project {name}."
 
-    @tool("Deleting Project {0}")
+    @tool("Deleting Project {project_name}")
     async def delete_project(self, project_name: str) -> str:
         """Deletes a project. Look up the existing projects and use the name that most closely matches the user's
         request. Make sure you have the name correct. Be very careful when deleting projects. You should always
@@ -128,7 +128,7 @@ class FlowstateAgent(Agent):
         else:
             return "Project not found."
 
-    @tool("Deleting Task {1} from Project {0}")
+    @tool("Deleting Task {task_title} from Project {project_name}")
     async def delete_task_from_project(self, project_name: str, task_title: str) -> str:
         """Deletes a task. Look up the existing projects and use the name that most closely matches the user's
         request. Look up the existing tasks for that project and use the title that most closely matches the user's
@@ -180,7 +180,7 @@ class FlowstateAgent(Agent):
         print(f"DB :: Retrieved {len(projects)} projects for user {self._user.id}.")
         return [project.name for project in projects]
 
-    @tool("Getting Available Tasks in Project {0}")
+    @tool("Getting Available Tasks in Project {project_name}")
     async def get_task_titles(self, project_name: str) -> list[str] | Literal["Project not found."]:
         """Returns a list of task titles in the requested project. If the project doesn't exist, returns an error
         message."""

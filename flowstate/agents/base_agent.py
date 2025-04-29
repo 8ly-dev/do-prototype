@@ -130,7 +130,11 @@ class Agent[DT, OT: str]:
             arguments = signature.bind(*args, **kwargs)
             name = name_callable(**arguments.arguments)
             await self._report_tool(name)
-            return await tool(*args, **kwargs)
+            try:
+                return await tool(*args, **kwargs)
+            except Exception as e:
+                print(f"Error in tool {attr_name}: {e}")
+                return f"Error in tool {attr_name}: {e}"
 
         run_tool.__doc__ = tool.__doc__
         return run_tool

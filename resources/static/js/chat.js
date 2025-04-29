@@ -34,8 +34,7 @@ class FlowstateChat {
             // Whether to support suggested questions/actions
             supportSuggestedQuestions: false,
 
-            // Whether to support tool messages
-            supportToolMessages: false,
+            // Tool messages are now supported on all pages
 
             // Override with any provided options
             ...options
@@ -191,9 +190,7 @@ class FlowstateChat {
         this.socket.addEventListener('close', () => {
             console.log('Disconnected from WebSocket server');
             this.hideLoadingIndicator();
-            if (this.options.supportToolMessages) {
-                this.fadeOutAllToolMessages();
-            }
+            this.fadeOutAllToolMessages();
             this.addMessage('Connection closed. Please refresh the page to reconnect.', 'system');
         });
 
@@ -201,9 +198,7 @@ class FlowstateChat {
         this.socket.addEventListener('error', (event) => {
             console.error('WebSocket error:', event);
             this.hideLoadingIndicator();
-            if (this.options.supportToolMessages) {
-                this.fadeOutAllToolMessages();
-            }
+            this.fadeOutAllToolMessages();
             this.addMessage('Error connecting to server.', 'system');
         });
     }
@@ -232,9 +227,7 @@ class FlowstateChat {
                 case 'reply':
                     this.hideLoadingIndicator();
                     this.addMessage(data.reply, 'system');
-                    if (this.options.supportToolMessages) {
-                        this.fadeOutAllToolMessages();
-                    }
+                    this.fadeOutAllToolMessages();
                     if(window.login_success) {
                         setTimeout(() => {
                             window.location.href = '/';
@@ -247,10 +240,8 @@ class FlowstateChat {
                     }
                     break;
                 case 'using':
-                    if (this.options.supportToolMessages) {
-                        console.log("Using " + data.tool_message);
-                        this.addToolMessage(data.tool_message);
-                    }
+                    console.log("Using " + data.tool_message);
+                    this.addToolMessage(data.tool_message);
                     break;
                 default:
                     console.log(data);
@@ -473,7 +464,7 @@ class FlowstateChat {
     }
 
     addToolMessage(message) {
-        if (!this.options.supportToolMessages || !this.elements.toolMessagesContainer) {
+        if (!this.elements.toolMessagesContainer) {
             return;
         }
 
@@ -494,7 +485,7 @@ class FlowstateChat {
     }
 
     fadeOutAllToolMessages() {
-        if (!this.options.supportToolMessages || !this.elements.toolMessagesContainer) {
+        if (!this.elements.toolMessagesContainer) {
             return;
         }
 
