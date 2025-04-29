@@ -256,6 +256,7 @@ class FlowstateAgent(Agent):
                 response = await client.get(url)
                 return response.text
         else:
+            print("--- BLOCKED")
             return "Access denied: URL not allowed."
 
     def _do_websearch(self, search_terms: str) -> list[dict[str, str]]:
