@@ -1,7 +1,7 @@
 """
 This module contains the base Agent class for the Flowstate application.
 """
-
+import inspect
 from datetime import UTC, datetime
 from functools import wraps
 from typing import Type
@@ -121,15 +121,18 @@ class Agent[DT, OT: str]:
 
         @wraps(tool)
         async def run_tool(*args, **kwargs):
+            print("Using tool:", attr_name)
             name_callable = getattr(tool, "nice_name", attr_name)
             if isinstance(name_callable, str):
                 name_callable = name_callable.format
 
-            await self._report_tool(
-                name_callable(*args, **kwargs)
-            )
+            signature = inspect.signature(tool)
+            arguments = signature.bind(*args, **kwargs)
+            name = name_callable(**arguments.arguments)
+            await self._report_tool(name)
             return await tool(*args, **kwargs)
 
+        run_tool.__doc__ = tool.__doc__
         return run_tool
 
     async def __current_date(self) -> str:
