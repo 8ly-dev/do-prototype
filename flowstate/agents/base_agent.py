@@ -2,6 +2,7 @@
 This module contains the base Agent class for the Flowstate application.
 """
 import inspect
+import traceback
 from datetime import UTC, datetime
 from functools import wraps
 from typing import Type
@@ -112,7 +113,16 @@ class Agent[DT, OT: str]:
         if output_type:
             kwargs["output_type"] = output_type
 
-        response = await self.agent.run(prompt, message_history=self.history, **kwargs)
+        try:
+            response = await self.agent.run(prompt, message_history=self.history, **kwargs)
+        except Exception as e:
+            # Print the full stack trace and error
+            print(f"Error sending prompt {prompt[10:]}...")
+            traceback.print_exc()
+            raise
+        finally:
+            print(f"Done sending prompt {prompt[10:]}...")
+
         self.history.extend(response.new_messages())
         return response.output
 
@@ -128,13 +138,21 @@ class Agent[DT, OT: str]:
 
             signature = inspect.signature(tool)
             arguments = signature.bind(*args, **kwargs)
-            name = name_callable(**arguments.arguments)
+            try:
+                name = name_callable(**arguments.arguments)
+            except Exception as e:
+                print(f"Error in tool {attr_name}: {e}")
+                print(arguments.arguments)
+                return f"Error: {e}"
+
             await self._report_tool(name)
             try:
                 return await tool(*args, **kwargs)
             except Exception as e:
                 print(f"Error in tool {attr_name}: {e}")
                 return f"Error in tool {attr_name}: {e}"
+            finally:
+                print("Done using tool:", attr_name)
 
         run_tool.__doc__ = tool.__doc__
         return run_tool
