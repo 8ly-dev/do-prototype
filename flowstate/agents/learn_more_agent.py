@@ -80,7 +80,7 @@ class LearnMoreAgent(Agent):
         """Creates a link to the file on GitHub. If no file path is given it returns the repo link."""
         if not file_path:
             return "https://github.com/8ly-dev/flowstate-prototype"
-        
+
         return f"https://github.com/8ly-dev/flowstate-prototype/blob/main/{file_path}"
 
     @tool("Listing Files")
