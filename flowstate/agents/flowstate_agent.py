@@ -3,8 +3,11 @@ This module contains the FlowstateAgent class for managing tasks within projects
 """
 
 import re
+from datetime import datetime, timedelta, UTC
 from typing import Literal, Optional, List, Dict, Any
 
+import dateparser
+import humanize
 from starlette.websockets import WebSocket
 
 from flowstate.agents.base_agent import Agent, tool
@@ -103,6 +106,26 @@ class FlowstateAgent(Agent):
 
         self._examples.clear()
         return response
+
+    @tool("Processing dates")
+    async def convert_to_iso_utc_date(self, date: str) -> str:
+        """Converts any date, time, or time frame to an ISO-8601 date string in UTC. This can process exact dates or
+        relative dates."""
+        return dateparser.parse(date).astimezone(UTC).isoformat()
+
+    @tool("Formatting dates")
+    async def format_date(self, date: str) -> str:
+        """Converts an ISO-8601 date string to a human-friendly format."""
+        date = datetime.fromisoformat(date)
+        now = datetime.now(UTC)
+        delta = now - date
+        if delta // timedelta(days=1) < 1:
+            return humanize.naturaltime(delta)
+
+        if delta // timedelta(days=365) < 1:
+            return humanize.naturalday(date)
+
+        return humanize.naturaldate(date)
 
     @tool("Creating Project {name}")
     async def create_project(self, name: str) -> str:
