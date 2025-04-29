@@ -122,8 +122,7 @@ class FlowstateChat(BaseChat):
             await self.send_json(CommandModel(command="typing"))
 
             nudge_message = await self.agent.send_prompt(
-                f"This is the software developer: {self.user.username} is inactive and hasn't done anything yet. Send a message "
-                f"to inspire them to get started. Remember to use the example formatter."
+                f"The user is inactive and hasn't done anything yet. Send a message to inspire them to get started."
             )
 
             # Send nudge message
