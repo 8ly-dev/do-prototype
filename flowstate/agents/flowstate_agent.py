@@ -115,6 +115,10 @@ class FlowstateAgent(Agent):
         Returns:
             The agent's response with formatted examples
         """
+        urls = re.findall(r"(?:https|http)://[a-zA-Z0-9./?=&\-]+", prompt)
+        self._allowed_urls.update(urls)
+        print(f"ALLOWED URLS: {self._allowed_urls}")
+
         response = await super().send_prompt(prompt, deps=deps)
         for example, formatted in self._examples.items():
             response = re.sub(f'["]?{example}["]?', formatted, response)
