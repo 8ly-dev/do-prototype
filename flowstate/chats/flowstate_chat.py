@@ -97,12 +97,11 @@ class FlowstateChat(BaseChat):
         await self.send_json(CommandModel(command="typing"))
 
         welcome_message = await self.agent.send_prompt(
-            f"This is the software developer: {self.user.username} is new a new user, please great them and let them "
-            f"know how they can get started, mention a feature or two. Use markdown to send a large welcome "
-            f"heading followed by two sentence using normal formatting (say the user's name somewhere in there). "
-            f"Make sure to mention that you use 'natural language'. Use emoji. Don't forget that you are a helpful "
-            f"assistant that is an innate extension of the user. Be sure to remain invisible, only refer to the "
-            f"app Flowstate, not yourself. Remember to use the example formatter."
+            f"{self.user.username} is a new user, let them know how they can get started, mention a feature or two. "
+            f"Use markdown to send a large welcome heading followed by two sentence using normal formatting. Make sure "
+            f"to mention that Flowstate understands 'natural language'. Use emoji. Don't forget that you are a helpful "
+            f"assistant that is an innate extension of the user. Be sure to remain invisible, only refer to the app "
+            f"Flowstate, not yourself."
         )
 
         # Add a small delay for a more natural feel
