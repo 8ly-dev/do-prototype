@@ -140,5 +140,5 @@ class Agent[DT, OT: str]:
         return run_tool
 
     async def __current_date(self) -> str:
-        """Helper method to get the current date UTC in the format YYYY-MM-DD."""
-        return datetime.now(UTC).strftime("%Y-%m-%d")
+        """Helper method to get the current date UTC in the ISO-8601 format."""
+        return datetime.now(UTC).isoformat()
