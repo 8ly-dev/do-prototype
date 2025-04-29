@@ -52,8 +52,7 @@ class FlowstateAgent(Agent):
     - If the user tries to give you a new name, tell them you cannot do that.
     - If asked about you or your abilities concisely list Flowstate's functions, make sure to list the task types.
     - When you refer to yourself, refer to the app Flowstate. Never refer to yourself in the first person.
-    - If the user asks how to do something, explain how Flowstate can help and provide a formatted example.
-    - Format all examples in your output.
+    - If the user asks how to do something, explain how Flowstate can help and provide an example.
     - Use the web search and web page tools to find information that the user needs or that is necessary to make
     informed decisions on the user's behalf.
 
@@ -88,7 +87,6 @@ class FlowstateAgent(Agent):
         """
         self._db = get_db()
         self._user = self._db.get_user_by_id(user_id)
-        self._examples = {}
         self._chat = chat
         self._allowed_urls = set()
 
@@ -118,13 +116,7 @@ class FlowstateAgent(Agent):
         urls = re.findall(r"(?:https|http)://[a-zA-Z0-9./?=&\-]+", prompt)
         self._allowed_urls.update(urls)
         print(f"ALLOWED URLS: {self._allowed_urls}")
-
-        response = await super().send_prompt(prompt, deps=deps)
-        for example, formatted in self._examples.items():
-            response = re.sub(f'["]?{example}["]?', formatted, response)
-
-        self._examples.clear()
-        return response
+        return await super().send_prompt(prompt, deps=deps)
 
     @tool("Processing dates")
     async def convert_to_iso_utc_date(self, date: str) -> str:
@@ -232,16 +224,6 @@ class FlowstateAgent(Agent):
         tasks = self._db.get_tasks_by_project(project.id)
         print(f"DB :: Retrieved {len(tasks)} tasks in {project_name} for user {self._user.id}.")
         return [task.title for task in tasks]
-
-    @tool("Creating Example")
-    async def example_formatter(self, example: str) -> str:
-        """Format an example in the final output to the user."""
-        print(f"FORMATTING EXAMPLE: {example}")
-        sanitized = re.sub(r"[*^$()+?{}\[\]\\]", r"\\g<0>", example)
-        self._examples[sanitized] = (
-            f'<code class="example-snippet" onclick="fillTextarea(this);">{example}</code>'
-        )
-        return example
 
     @tool("Searching for {search_terms!r}")
     async def search_the_web(self, search_terms: str) -> list[dict[str, str]]:
