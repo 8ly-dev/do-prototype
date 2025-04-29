@@ -1,13 +1,16 @@
 """
 This module contains the FlowstateAgent class for managing tasks within projects.
 """
-
+import asyncio
 import re
 from datetime import datetime, timedelta, UTC
+from pprint import pprint
 from typing import Literal, Optional, List, Dict, Any
 
 import dateparser
+import httpx
 import humanize
+from duckduckgo_search import DDGS
 from starlette.websockets import WebSocket
 
 from flowstate.agents.base_agent import Agent, tool
@@ -24,6 +27,15 @@ class FlowstateAgent(Agent):
 
     Flowstate is the first app from 8ly, a company dedicated to creating tools
     that are "innately you, innately human."
+
+    Approach:
+    Think about the user's request.
+    A. If they are being conversational, be conversational, directing towards actions
+    B. If they have requested you do something, do this:
+        - Create a plan for how you will accomplish what they have requested
+        - Use tools to do what you've planned
+        - Adapt to changes and rework the plan, repeating until you've done what was requested
+        - Give a conversational summary of your step-by-step actions
 
     Guidelines:
     - Never refer to yourself as an AI, agent, or assistant. Do not mention automation or technical processes.
@@ -42,6 +54,8 @@ class FlowstateAgent(Agent):
     - When you refer to yourself, refer to the app Flowstate. Never refer to yourself in the first person.
     - If the user asks how to do something, explain how Flowstate can help and provide a formatted example.
     - Format all examples in your output.
+    - Use the web search and web page tools to find information that the user needs or that is necessary to make
+    informed decisions on the user's behalf.
 
     Limitations:
     - Only act within the scope of the user's expressed intentions and granted permissions.
@@ -76,6 +90,7 @@ class FlowstateAgent(Agent):
         self._user = self._db.get_user_by_id(user_id)
         self._examples = {}
         self._chat = chat
+        self._allowed_urls = set()
 
         self.system_prompt = f"The current user is {self._user.username}.\n{self.system_prompt}"
         if project:
@@ -141,9 +156,7 @@ class FlowstateAgent(Agent):
 
     @tool("Deleting Project {project_name}")
     async def delete_project(self, project_name: str) -> str:
-        """Deletes a project. Look up the existing projects and use the name that most closely matches the user's
-        request. Make sure you have the name correct. Be very careful when deleting projects. You should always
-        confirm the user's intent before deleting a project."""
+        """Deletes a project by name."""
         print(f"DB :: Received delete project request for {project_name}")
         if project := await self._find_project_by_name(project_name):
             self._db.delete_project(project.id)
@@ -226,12 +239,37 @@ class FlowstateAgent(Agent):
         )
         return example
 
+    @tool("Searching for {search_terms!r}")
+    async def search_the_web(self, search_terms: str) -> list[dict[str, str]]:
+        """Searches the web for the given search terms and returns the top 10 results."""
+        print(f"SEARCHING: {search_terms}")
+        results = await asyncio.get_running_loop().run_in_executor(None, self._do_websearch, search_terms)
+        pprint(results)
+        return results
+
+    @tool("Reading {url}")
+    async def load_web_page(self, url: str) -> str:
+        """Loads the content of a web page and returns it as a string."""
+        print(f"LOADING: {url}")
+        if url in self._allowed_urls:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url)
+                return response.text
+        else:
+            return "Access denied: URL not allowed."
+
+    def _do_websearch(self, search_terms: str) -> list[dict[str, str]]:
+        engine = DDGS()
+        results = engine.text(search_terms, max_results=10)
+        return results
+
     async def _find_project_by_name(self, project_name: str) -> Project | None:
         """Helper method to find a project by name. Returns the project if found, or None otherwise."""
         projects = self._db.get_projects_by_user(self._user.id)
         for project in projects:
             if project.name.lower() == project_name.lower():
                 return project
+
         return None
 
     async def _find_task_by_name(self, project_id: int, task_title: str) -> Task | None:
