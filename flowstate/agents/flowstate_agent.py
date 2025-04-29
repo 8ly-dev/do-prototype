@@ -148,7 +148,7 @@ class FlowstateAgent(Agent):
         print(f"DB :: Deleted task {task_title} in {project_name} with ID {task.id}.")
         return f"Deleted task {task_title}."
 
-    @tool("Creating Task {project_name} in Project {title}")
+    @tool("Creating Task {title} in Project {project_name}")
     async def create_task(
         self,
         project_name: str = None,
