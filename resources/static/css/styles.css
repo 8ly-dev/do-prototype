@@ -94,6 +94,16 @@ hr {
     max-width: 100%;
     padding: 0.5rem;
   }
+
+  /* Ensure header bar content is responsive */
+  body.learn-more .header-bar {
+    justify-content: center;
+  }
+
+  body.learn-more .header-bar > div {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
 }
 
   /* Menu toggle button */
@@ -613,7 +623,7 @@ body.learn-more .system-message + .system-message {
 
 /* Suggested questions - both sidebar and inline */
 #suggested-questions, .suggested-questions-inline {
-  padding: 0.75rem;
+  padding: 0 0.75rem 0.75rem 0.75rem;
   opacity: 1;
   visibility: visible;
   transition: opacity 0.5s, visibility 0.5s;
@@ -628,9 +638,10 @@ body.learn-more .system-message + .system-message {
 
 /* Inline suggested questions specific styles */
 .suggested-questions-inline {
-  margin: 0.5rem 0 1.5rem 0;
   display: flex;
   flex-wrap: wrap;
+  margin-top: 0 !important;
+  margin-bottom: 1.5rem !important;
   animation: fadeIn 0.5s ease-in-out;
   width: 100%;
 }
@@ -662,11 +673,14 @@ body.learn-more .system-message + .system-message {
 body.learn-more .header-bar {
   backdrop-filter: blur(4px);                    /* Blurs content behind */
   -webkit-backdrop-filter: blur(4px);            /* For Safari support */
-  border-bottom: 1px solid rgba(64, 64, 64, 0.3);    /* Optional: subtle border */
+  display: flex;
+  justify-content: center; /* Center the content horizontally */
 }
 
-body.learn-more .header-bar div {
-  padding: 0 0.75rem;
+body.learn-more .header-bar > div {
+  width: 100%;
+  max-width: 720px; /* Match the center column max-width */
+  padding: 0; /* Remove padding to align with center column */
 }
 
 .thinking {
