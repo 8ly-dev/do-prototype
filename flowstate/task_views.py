@@ -43,8 +43,8 @@ async def task_view(request: Request):
     """
     Handle requests to view a task.
 
-    This function renders different templates based on the task type (todo, email, reminder, 
-    calendar, create_task). For email tasks, it also generates email suggestions using 
+    This function renders different templates based on the task type (todo, email, reminder,
+    calendar, create_task). For email tasks, it also generates email suggestions using
     the EmailAgent.
 
     Args:
@@ -83,8 +83,8 @@ async def task_view(request: Request):
     # Get all projects for the user (for sidebar)
     projects = db.get_projects_by_user(user_id)
 
-    # Get top task for the user (same as dashboard)
-    top_task = db.get_users_top_task(user_id)
+    # Right Now section has been removed
+    # No longer need to get top task
 
     # Get user information
     user = db.get_user_by_id(user_id)
@@ -119,7 +119,7 @@ async def task_view(request: Request):
         projects=projects,
         current_project=project,
         task=task,
-        top_task=top_task,
+        # top_task removed
         user=user,
         **values,
     ))

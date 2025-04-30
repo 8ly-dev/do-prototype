@@ -535,9 +535,7 @@ body.task .task-card {
 }
 
 /* Dashboard page */
-.right-now-card {
-  border-radius: 12px;
-}
+/* Right Now section has been removed */
 
 /* Project page */
 body.project .task-card {
