@@ -404,6 +404,9 @@ class FlowstateChat {
             messageElement.innerHTML = `<p>${message}</p>`;
         }
 
+        // Process links to open in new tab
+        this.processLinksInMessage(messageElement);
+
         // Add new message
         this.elements.chatMessages.appendChild(messageElement);
 
@@ -461,6 +464,20 @@ class FlowstateChat {
         // Consider "at bottom" if within 50px of the bottom
         console.log(documentHeight, scrollPosition);
         return documentHeight - scrollPosition <= 50;
+    }
+
+    processLinksInMessage(messageElement) {
+        // Find all links in the message
+        const links = messageElement.querySelectorAll('a');
+
+        // Add target="_blank" and rel="noopener noreferrer" to each link
+        links.forEach(link => {
+            // Only process links that have an href attribute
+            if (link.href) {
+                link.setAttribute('target', '_blank');
+                link.setAttribute('rel', 'noopener noreferrer'); // Security best practice
+            }
+        });
     }
 
     addToolMessage(message) {
