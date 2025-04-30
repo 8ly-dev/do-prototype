@@ -75,7 +75,7 @@ class LearnMoreAgent(Agent):
         self._root = Path(__file__).parent.parent.parent
         super().__init__(self._chat.send_using)
 
-    @tool("Creating GitHub Link")
+    @tool("Creating GitHub link")
     async def create_github_link(self, file_path: str = "") -> str:
         """Creates a link to the file on GitHub. If no file path is given it returns the repo link."""
         if not file_path:
@@ -83,7 +83,7 @@ class LearnMoreAgent(Agent):
 
         return f"https://github.com/8ly-dev/flowstate-prototype/blob/main/{file_path}"
 
-    @tool("Listing Files")
+    @tool("Listing files")
     async def list_files(self) -> list[str]:
         """Activate this tool whenever you need to know what documents are available to you to answer the user's
         questions."""
@@ -91,7 +91,7 @@ class LearnMoreAgent(Agent):
         print("LISTING FILES", files)
         return files
 
-    @tool(lambda file_path: f"Reading File {file_path.split('/')[-1]}")
+    @tool(lambda file_path: f"Reading file {file_path.split('/')[-1]}")
     async def read_file(self, file_path: str):
         """Activate this tool whenever you need to read a document. Use the file path to locate the file. If the file
         doesn't exist, you'll get an error message back."""

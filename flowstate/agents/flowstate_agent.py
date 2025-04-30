@@ -142,7 +142,7 @@ class FlowstateAgent(Agent):
 
         return humanize.naturaldate(date)
 
-    @tool("Creating Project {name}")
+    @tool("Creating project {name}")
     async def create_project(self, name: str) -> str:
         """Creates a new project. Please ensure that project names are unique before calling this method. Convert
         names to title case for better user experience. If there's a similar project name, ask the user what they
@@ -154,7 +154,7 @@ class FlowstateAgent(Agent):
         print(f"DB :: Created project {name} with ID {project_id}.")
         return f"Created project {name}."
 
-    @tool("Deleting Project {project_name}")
+    @tool("Deleting project {project_name}")
     async def delete_project(self, project_name: str) -> str:
         """Deletes a project by name."""
         print(f"DB :: Received delete project request for {project_name}")
@@ -165,7 +165,7 @@ class FlowstateAgent(Agent):
         else:
             return "Project not found."
 
-    @tool("Deleting Task {task_title} from Project {project_name}")
+    @tool("Deleting task {task_title} from {project_name}")
     async def delete_task_from_project(self, project_name: str, task_title: str) -> str:
         """Deletes a task. Look up the existing projects and use the name that most closely matches the user's
         request. Look up the existing tasks for that project and use the title that most closely matches the user's
@@ -184,7 +184,7 @@ class FlowstateAgent(Agent):
         print(f"DB :: Deleted task {task_title} in {project_name} with ID {task.id}.")
         return f"Deleted task {task_title}."
 
-    @tool("Creating Task {title} in Project {project_name}")
+    @tool("Creating task {title} in {project_name}")
     async def create_task(
         self,
         project_name: str = None,
@@ -210,14 +210,14 @@ class FlowstateAgent(Agent):
 
         return "Project not found."
 
-    @tool("Getting Available Projects")
+    @tool("Getting your projects")
     async def get_project_names(self) -> list[str]:
         """Returns a list of project names for the current user."""
         projects = self._db.get_projects_by_user(self._user.id)
         print(f"DB :: Retrieved {len(projects)} projects for user {self._user.id}.")
         return [project.name for project in projects]
 
-    @tool("Getting Available Tasks in Project {project_name}")
+    @tool("Getting your tasks in {project_name}")
     async def get_task_titles(self, project_name: str) -> list[str] | Literal["Project not found."]:
         """Returns a list of task titles in the requested project. If the project doesn't exist, returns an error
         message."""
@@ -229,7 +229,7 @@ class FlowstateAgent(Agent):
         print(f"DB :: Retrieved {len(tasks)} tasks in {project_name} for user {self._user.id}.")
         return [task.title for task in tasks]
 
-    @tool("Searching for {search_terms!r}")
+    @tool("Searching the web for {search_terms!r}")
     async def search_the_web(self, search_terms: str) -> list[dict[str, str]] | str:
         """Searches the web for the given search terms and returns the top 10 results."""
         print(f"SEARCHING: {search_terms}")
@@ -251,7 +251,7 @@ class FlowstateAgent(Agent):
         except Exception as e:
             return f"Error: {e}"
 
-    @tool("Getting Next Task")
+    @tool("Getting your next task")
     async def get_next_task(self) -> Task | Literal["No tasks found."]:
         """Returns the next task for the user to complete."""
         task = self._db.get_users_top_task(self._user.id)
