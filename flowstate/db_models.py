@@ -8,7 +8,7 @@ and utility functions for getting a database instance.
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Literal, Optional, List
 
 

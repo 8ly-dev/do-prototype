@@ -176,7 +176,10 @@ class FlowstateChat {
             path = `/ws/${projectId}`;
         }
 
-        this.socket = new WebSocket(`${protocol}//${window.location.host}${path}`);
+        // Get timezone offset in minutes and append as query parameter
+        const timezoneOffset = new Date().getTimezoneOffset();
+        const wsUrl = `${protocol}//${window.location.host}${path}?tz_offset=${-timezoneOffset}`;
+        this.socket = new WebSocket(wsUrl);
 
         // Connection opened
         this.socket.addEventListener('open', () => {

@@ -115,10 +115,10 @@ class FlowstateAgent(Agent):
         return await super().send_prompt(prompt, deps=deps)
 
     @tool("Processing dates")
-    async def convert_to_iso_utc_date(self, date: str) -> str:
-        """Converts any date, time, or time frame to an ISO-8601 date string in UTC. This can process exact dates or
+    async def convert_to_iso_date(self, date: str) -> str:
+        """Converts any date, time, or time frame to an ISO-8601 date string. This can process exact dates or
         relative dates."""
-        return dateparser.parse(date).astimezone(UTC).isoformat()
+        return dateparser.parse(date).astimezone(self.user_timezone).isoformat()
 
     @tool("Formatting dates")
     async def format_date(self, date: str) -> str:

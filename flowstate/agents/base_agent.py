@@ -3,7 +3,7 @@ This module contains the base Agent class for the Flowstate application.
 """
 import inspect
 import traceback
-from datetime import UTC, datetime
+from datetime import timedelta, timezone, UTC, datetime
 from functools import wraps
 from typing import Type
 
@@ -45,7 +45,7 @@ class Agent[DT, OT: str]:
     deps_type: Type[DT] | None = None
     output_type: OT | None = None
 
-    def __init__(self, report_tool = None):
+    def __init__(self, report_tool = None, user_timezone: timezone | int = UTC):
         """
         Initialize the agent with an empty history and configure the underlying PydanticAgent.
 
@@ -53,6 +53,11 @@ class Agent[DT, OT: str]:
         """
         self.history = []
         self._report_tool_func = report_tool
+        self.user_timezone = (
+            user_timezone
+            if isinstance(user_timezone, timezone)
+            else timezone(timedelta(minutes=user_timezone))
+        )
 
         kwargs = {}
         if self.deps_type:
@@ -159,4 +164,4 @@ class Agent[DT, OT: str]:
 
     async def __current_date(self) -> str:
         """Helper method to get the current date UTC in the ISO-8601 format."""
-        return datetime.now(UTC).isoformat()
+        return datetime.now(self.user_timezone).isoformat()

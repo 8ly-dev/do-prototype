@@ -78,7 +78,12 @@ class FlowstateChat(BaseChat):
         self.project = self.db.get_project(self.project_id) if self.project_id else None
 
         # Initialize the agent with the chat instance
-        self.agent = FlowstateAgent(user_id=self.user_id, project=self.project, chat=self)
+        self.agent = FlowstateAgent(
+            user_id=self.user_id,
+            project=self.project,
+            chat=self,
+            user_timezone=int(self.websocket.query_params.get("tz_offset", 0)),
+        )
 
         if not self.project:
             projects = self.db.get_projects_by_user(self.user_id)
