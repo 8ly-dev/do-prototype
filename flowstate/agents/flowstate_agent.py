@@ -123,13 +123,21 @@ class FlowstateAgent(Agent):
     @tool("Formatting dates")
     async def format_date(self, date: str) -> str:
         """Converts an ISO-8601 date string to a human-friendly format."""
-        date = datetime.fromisoformat(date)
-        now = datetime.now(UTC)
-        delta = now - date
-        if delta // timedelta(days=1) < 1:
+        date = datetime.fromisoformat(date).astimezone(self.user_timezone)
+        now = datetime.now(self.user_timezone)
+        delta = date - now
+        if delta <= timedelta(hours=6):
+            print(date, "next 6hrs")
             return humanize.naturaltime(delta)
 
-        if delta // timedelta(days=365) < 1:
+        elif delta // timedelta(days=1) < 1 and now.day != date.day:
+            time = date.strftime("%I").lstrip("0")
+            if date.minute != 0:
+                time += f":{date.minute}"
+            time += f"{date.strftime('%p').lower()}"
+            return f"tomorrow at {time}"
+
+        elif delta // timedelta(days=365) < 1:
             return humanize.naturalday(date)
 
         return humanize.naturaldate(date)
