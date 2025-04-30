@@ -97,7 +97,9 @@ class FlowstateChat(BaseChat):
 
         message = await self.agent.send_prompt(
             f"Brief the user on what they need to do next, keep it short (two sentences) and don't get into the details. "
-            f"Your response must have a markdown title.\n\nExpected response format:\n\n## 🙂 Task Title\nTask brief."
+            f"Your response must have a markdown title. Do not intro your response. Follow up with a "
+            f"horizontal line and ask the user what they need to do.\n\nExpected "
+            f"response format:\n\n## 🙂 Task Title\nTask brief\n---\nCall to action"
         )
 
         # Add a small delay for a more natural feel
