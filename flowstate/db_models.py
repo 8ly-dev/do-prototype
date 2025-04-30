@@ -213,7 +213,7 @@ class FlowstateDB:
         Returns:
             The ID of the newly created project
         """
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(UTC).isoformat()
         c = self.conn.cursor()
         c.execute('INSERT INTO projects (user_id, name, created_at) VALUES (?, ?, ?)', (user_id, name, now))
         self.conn.commit()
@@ -267,7 +267,8 @@ class FlowstateDB:
         Returns:
             The ID of the newly created task
         """
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(UTC).isoformat()
+        due_date = datetime.fromisoformat(due_date).astimezone(UTC).isoformat() if due_date else None
         c = self.conn.cursor()
         c.execute('''
             INSERT INTO tasks (project_id, title, description, due_date, priority, task_type, created_at)
