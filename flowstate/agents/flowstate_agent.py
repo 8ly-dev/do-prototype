@@ -2,7 +2,7 @@
 This module contains the FlowstateAgent class for managing tasks within projects.
 """
 import asyncio
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from pprint import pprint
 from typing import Literal
 
@@ -76,7 +76,7 @@ class FlowstateAgent(Agent):
 
     Tone:
     Natural, warm, and focused. Always prioritize clarity and helpfulness."""
-    def __init__(self, user_id: int = 0, project: Project | None = None, chat = None):
+    def __init__(self, user_id: int = 0, project: Project | None = None, chat = None, user_timezone = int):
         """
         Initialize the FlowstateAgent with user and project information.
 
@@ -94,9 +94,9 @@ class FlowstateAgent(Agent):
             self.system_prompt += f"\n\nThe user is currently working in the project '{project.name}'. When a project is needed but not given, use the current project."
 
         self.project_id = project.id if project else None
-        # Pass the send_using method to the base agent if chat is provided
+
         report_tool = self._chat.send_using if self._chat else None
-        super().__init__(report_tool)
+        super().__init__(report_tool, user_timezone=user_timezone)
 
     async def send_prompt(self, prompt: str, *, deps=None):
         """
