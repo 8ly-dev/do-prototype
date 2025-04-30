@@ -2,19 +2,17 @@
 This module contains the FlowstateAgent class for managing tasks within projects.
 """
 import asyncio
-import re
 from datetime import datetime, timedelta, UTC
 from pprint import pprint
-from typing import Literal, Optional, List, Dict, Any
+from typing import Literal
 
 import dateparser
 import httpx
 import humanize
 from duckduckgo_search import DDGS
-from starlette.websockets import WebSocket
 
 from flowstate.agents.base_agent import Agent, tool
-from flowstate.db_models import get_db, Project, Task, User
+from flowstate.db_models import get_db, Project, Task
 
 
 class FlowstateAgent(Agent):
@@ -42,9 +40,7 @@ class FlowstateAgent(Agent):
     - Don't talk about Flowstate as an app, use the name Flowstate instead.
     - Respond and act in a way that feels intuitive, supportive, and innately human.
     - When users jot down what they need to achieve, extract the action, context, relevant people, dates, and priorities.
-    - Proactively schedule, prioritize, and update tasks based on urgency and context, surfacing only what is most important at the right time.
     - If a task requires more information, gently prompt the user for clarification in a natural, conversational manner.
-    - When a task involves an external action (such as sending an email or creating a calendar event), prepare the necessary draft or interface for the user to review and approve.
     - Use a calm, clear, and encouraging tone. Keep responses concise and actionable.
     - Always maintain user privacy and never expose technical details or internal logic.
     - Do not ask yes/no questions.
@@ -54,7 +50,11 @@ class FlowstateAgent(Agent):
     - When you refer to yourself, refer to the app Flowstate. Never refer to yourself in the first person.
     - If the user asks how to do something, explain how Flowstate can help and provide an example.
     - Use the web search and web page tools to find information that the user needs or that is necessary to make
-    informed decisions on the user's behalf.
+    informed decisions on the user's behalf. Don't make the user dig into results, drill down and get the answers for them.
+    - Never make anything up, use the tools available to you to provide grounded answers.
+    - Never use links unless they come from a tool or the user.
+    - Be proactive! Go as far as you can without asking the user. Don't ask the user to do more work if you possibly
+    can avoid it.
 
     Limitations:
     - Only act within the scope of the user's expressed intentions and granted permissions.
@@ -88,7 +88,6 @@ class FlowstateAgent(Agent):
         self._db = get_db()
         self._user = self._db.get_user_by_id(user_id)
         self._chat = chat
-        self._allowed_urls = set()
 
         self.system_prompt = f"The current user is {self._user.username}.\n{self.system_prompt}"
         if project:
@@ -113,9 +112,6 @@ class FlowstateAgent(Agent):
         Returns:
             The agent's response with formatted examples
         """
-        urls = re.findall(r"(?:https|http)://[a-zA-Z0-9./?=&\-]+", prompt)
-        self._allowed_urls.update(urls)
-        print(f"ALLOWED URLS: {self._allowed_urls}")
         return await super().send_prompt(prompt, deps=deps)
 
     @tool("Processing dates")
@@ -226,24 +222,35 @@ class FlowstateAgent(Agent):
         return [task.title for task in tasks]
 
     @tool("Searching for {search_terms!r}")
-    async def search_the_web(self, search_terms: str) -> list[dict[str, str]]:
+    async def search_the_web(self, search_terms: str) -> list[dict[str, str]] | str:
         """Searches the web for the given search terms and returns the top 10 results."""
         print(f"SEARCHING: {search_terms}")
-        results = await asyncio.get_running_loop().run_in_executor(None, self._do_websearch, search_terms)
-        pprint(results)
-        return results
+        try:
+            results = await asyncio.get_running_loop().run_in_executor(None, self._do_websearch, search_terms)
+        except Exception as e:
+            return f"Error: {e}"
+        else:
+            pprint(results)
+            return results
 
     @tool("Reading {url}")
     async def load_web_page(self, url: str) -> str:
         """Loads the content of a web page and returns it as a string."""
-        print(f"LOADING: {url}")
-        if url in self._allowed_urls:
+        try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(url)
                 return response.text
-        else:
-            print("--- BLOCKED")
-            return "Access denied: URL not allowed."
+        except Exception as e:
+            return f"Error: {e}"
+
+    @tool("Getting Next Task")
+    async def get_next_task(self) -> Task | Literal["No tasks found."]:
+        """Returns the next task for the user to complete."""
+        task = self._db.get_users_top_task(self._user.id)
+        if not task:
+            return "No tasks found."
+
+        return task
 
     def _do_websearch(self, search_terms: str) -> list[dict[str, str]]:
         engine = DDGS()

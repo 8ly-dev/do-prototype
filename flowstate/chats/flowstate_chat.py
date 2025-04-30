@@ -80,14 +80,33 @@ class FlowstateChat(BaseChat):
         # Initialize the agent with the chat instance
         self.agent = FlowstateAgent(user_id=self.user_id, project=self.project, chat=self)
 
-        # Send welcome message for new users
         if not self.project:
             projects = self.db.get_projects_by_user(self.user_id)
             if len(projects) == 0:
                 await self.send_welcome_message()
+            else:
+                await self.send_next_task()
 
         # Start the nudge task
         self.nudge_task = self.loop.create_task(self.nudge_user())
+
+    async def send_next_task(self):
+        """Send the next task to the user."""
+        start = time.time()
+        await self.send_json(CommandModel(command="typing"))
+
+        message = await self.agent.send_prompt(
+            f"Brief the user on what they need to do next, keep it short (two sentences) and don't get into the details. "
+            f"Your response must have a markdown title.\n\nExpected response format:\n\n## 🙂 Task Title\nTask brief."
+        )
+
+        # Add a small delay for a more natural feel
+        duration = time.time() - start
+        if duration < 1.5:
+            await asyncio.sleep(1.5 - duration)
+
+        # Send welcome message
+        await self.send_json(ReplyModel(reply=message))
 
     async def send_welcome_message(self):
         """Send a welcome message to new users."""
