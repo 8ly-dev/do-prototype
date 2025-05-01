@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Flowstate{% endblock %}</title>
+  <title>{% block title %}Do{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="/static/css/styles.css">
@@ -117,8 +117,8 @@
         supportSuggestedQuestions: {% block support_suggested_questions %}false{% endblock %}
       };
 
-      // Create a new instance of FlowstateChat with the appropriate options
-      window.flowstateChat = new FlowstateChat(chatOptions);
+      // Create a new instance of DoChat with the appropriate options
+      window.doChat = new DoChat(chatOptions);
     });
   </script>
 

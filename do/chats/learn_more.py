@@ -8,11 +8,11 @@ from typing import Literal, TypedDict
 
 import pydantic_ai
 
-from flowstate.agents import LearnMoreAgent, LearnMoreSuggestedActionsAgent
-from flowstate.auth import verify_access_token
-from flowstate.chats.base_chat import BaseChat
-from flowstate.db_models import get_db, User
-from flowstate.chats.utils import clean_response
+from do.agents import LearnMoreAgent, LearnMoreSuggestedActionsAgent
+from do.auth import verify_access_token
+from do.chats.base_chat import BaseChat
+from do.db_models import get_db, User
+from do.chats.utils import clean_response
 
 
 class PromptData(TypedDict):

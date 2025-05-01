@@ -1,5 +1,5 @@
 """
-Authentication utilities for the Flowstate application.
+Authentication utilities for the Do application.
 
 This module provides functions for generating and verifying access tokens
 used for user authentication.
@@ -10,10 +10,10 @@ import hmac
 from contextlib import suppress
 from datetime import datetime, UTC
 
-import flowstate.secrets
+import do.secrets
 
 
-SECRET_KEY: bytes = flowstate.secrets.get_secret(
+SECRET_KEY: bytes = do.secrets.get_secret(
     "secret-key",
     default="default-secret-please-configure"
 ).encode()

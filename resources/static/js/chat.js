@@ -1,12 +1,12 @@
 /**
- * Flowstate Chat Interface
+ * Do Chat Interface
  *
- * This module provides a reusable chat interface for Flowstate.
+ * This module provides a reusable chat interface for Do.
  * It handles WebSocket connections, message display, and user interactions.
  */
 
 // Main chat interface class
-class FlowstateChat {
+class DoChat {
     constructor(options = {}) {
         // Default options
         this.options = {

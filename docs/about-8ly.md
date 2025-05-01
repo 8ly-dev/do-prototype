@@ -50,7 +50,7 @@ We live in a distracted world. Most productivity tools add to the noise, demandi
 
 Right now it's just me, Zech. I've been coding for 20 years, I've got a degree in Computer Science, and I have this crazy idea for a company. I'm not sure where it'll take me, but I'm excited to see where it goes.
 
-I got the idea for 8ly and Flowstate while on vacation overlooking the Gulf of Mexico, in April, 2025. I've always had a passion for building tools that make life easier, maybe now is the time I take it to the next level.
+I got the idea for 8ly and Do while on vacation overlooking the Gulf of Mexico, in April, 2025. I've always had a passion for building tools that make life easier, maybe now is the time I take it to the next level.
 
 ### Join the Movement
 

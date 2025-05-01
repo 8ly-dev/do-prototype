@@ -1,5 +1,5 @@
 """
-This module contains the WebSocket handlers for the Flowstate application.
+This module contains the WebSocket handlers for the Do application.
 
 It defines the functions that handle WebSocket connections for chat functionality
 and the learn more page.
@@ -15,9 +15,9 @@ import pydantic_ai
 import starlette
 from starlette.websockets import WebSocket
 
-from flowstate.agents import LearnMoreAgent, LearnMoreSuggestedActionsAgent, TaskAgent
-from flowstate.auth import verify_access_token
-from flowstate.db_models import get_db
+from do.agents import LearnMoreAgent, LearnMoreSuggestedActionsAgent, TaskAgent
+from do.auth import verify_access_token
+from do.db_models import get_db
 
 
 async def chat_websocket(websocket: WebSocket):
@@ -62,7 +62,7 @@ async def chat_websocket(websocket: WebSocket):
                 f"heading followed by two sentence using normal formatting (say the user's name somewhere in there). "
                 f"Make sure to mention that you use 'natural language'. Use emoji. Don't forget that you are a helpful "
                 f"assistant that is an innate extension of the user. Be sure to remain invisible, only refer to the "
-                f"app Flowstate, not yourself. Remember to use the example formatter."
+                f"app Do, not yourself. Remember to use the example formatter."
             )
             duration = time.time() - start
             if duration < 1.5:

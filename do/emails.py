@@ -1,5 +1,5 @@
 """
-Email utilities for the Flowstate application.
+Email utilities for the Do application.
 
 This module provides classes and functions for sending emails,
 including dataclasses for representing email messages and sender configurations.
@@ -9,7 +9,7 @@ import smtplib
 from dataclasses import dataclass
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import flowstate.secrets
+import do.secrets
 
 
 @dataclass

@@ -12,4 +12,4 @@ wheels/
 .python-version
 secrets.*
 .DS_Store
-flowstate.db
+do.db

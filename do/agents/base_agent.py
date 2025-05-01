@@ -1,5 +1,5 @@
 """
-This module contains the base Agent class for the Flowstate application.
+This module contains the base Agent class for the Do application.
 """
 import inspect
 import traceback
@@ -9,7 +9,7 @@ from typing import Type
 
 from pydantic_ai import Agent as PydanticAgent
 
-from flowstate.agents.utils import get_model
+from do.agents.utils import get_model
 
 
 def tool(nice_name):

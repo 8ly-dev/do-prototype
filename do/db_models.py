@@ -1,5 +1,5 @@
 """
-Database models and utilities for the Flowstate application.
+Database models and utilities for the Do application.
 
 This module provides dataclasses for representing database entities,
 a database access layer for interacting with the SQLite database,
@@ -23,14 +23,14 @@ type TaskType = Literal[
 # --- Singleton DB Instance ---
 _db_instance = None
 
-def get_db(db_path="flowstate.db") -> 'FlowstateDB':
+def get_db(db_path="do.db") -> 'DoDb':
     """
-    Returns a singleton instance of FlowstateDB.
+    Returns a singleton instance of DoDb.
     This ensures we reuse the same database connection throughout the application.
     """
     global _db_instance
     if _db_instance is None:
-        _db_instance = FlowstateDB(db_path)
+        _db_instance = DoDb(db_path)
     return _db_instance
 
 # --- Dataclasses ---
@@ -91,14 +91,14 @@ class Task:
 
 # --- Database Layer ---
 
-class FlowstateDB:
+class DoDb:
     """
-    Database access layer for the Flowstate application.
+    Database access layer for the Do application.
 
     This class provides methods for interacting with the SQLite database,
     including creating, reading, updating, and deleting users, projects, and tasks.
     """
-    def __init__(self, db_path="flowstate.db"):
+    def __init__(self, db_path="do.db"):
         """
         Initialize the database connection and create tables if they don't exist.
 

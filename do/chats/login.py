@@ -8,9 +8,9 @@ from typing import Literal, TypedDict
 
 from starlette.websockets import WebSocket
 
-from flowstate.agents import LoginAgent
-from flowstate.chats.base_chat import BaseChat
-from flowstate.utils.messages import get_random_welcome_message
+from do.agents import LoginAgent
+from do.chats.base_chat import BaseChat
+from do.utils.messages import get_random_welcome_message
 
 
 class PromptData(TypedDict):

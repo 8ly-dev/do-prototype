@@ -1,5 +1,5 @@
 """
-This module contains the WebSocket handler for the Flowstate chat feature.
+This module contains the WebSocket handler for the Do chat feature.
 """
 
 import asyncio
@@ -11,10 +11,10 @@ from typing import Literal, TypedDict
 
 from starlette.websockets import WebSocket, WebSocketState
 
-from flowstate.agents import FlowstateAgent
-from flowstate.auth import verify_access_token
-from flowstate.chats.base_chat import BaseChat
-from flowstate.db_models import get_db
+from do.agents import DoAgent
+from do.auth import verify_access_token
+from do.chats.base_chat import BaseChat
+from do.db_models import get_db
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +47,11 @@ class UsingModel:
     kind: Literal["using"] = "using"
 
 
-class FlowstateChat(BaseChat):
+class DoChat(BaseChat):
     """
-    Handle WebSocket connections for the Flowstate chat feature.
+    Handle WebSocket connections for the Do chat feature.
 
-    This class authenticates the user, sets up a FlowstateAgent, and processes messages
+    This class authenticates the user, sets up a DoAgent, and processes messages
     from the client. It also handles task completion requests and sends responses back
     to the client.
     """
@@ -78,7 +78,7 @@ class FlowstateChat(BaseChat):
         self.project = self.db.get_project(self.project_id) if self.project_id else None
 
         # Initialize the agent with the chat instance
-        self.agent = FlowstateAgent(
+        self.agent = DoAgent(
             user_id=self.user_id,
             project=self.project,
             chat=self,
@@ -125,9 +125,9 @@ class FlowstateChat(BaseChat):
         welcome_message = await self.agent.send_prompt(
             f"{self.user.username} is a new user, let them know how they can get started, mention a feature or two. "
             f"Use markdown to send a large welcome heading followed by two sentence using normal formatting. Make sure "
-            f"to mention that Flowstate understands 'natural language'. Use emoji. Don't forget that you are a helpful "
+            f"to mention that Do understands 'natural language'. Use emoji. Don't forget that you are a helpful "
             f"assistant that is an innate extension of the user. Be sure to remain invisible, only refer to the app "
-            f"Flowstate, not yourself."
+            f"Do, not yourself."
         )
 
         # Add a small delay for a more natural feel
@@ -244,7 +244,7 @@ class FlowstateChat(BaseChat):
                     self.nudge_task = self.loop.create_task(self.nudge_user())
 
         except Exception as e:
-            self.logger.exception("Error in Flowstate chat websocket: %s", str(e))
+            self.logger.exception("Error in Do chat websocket: %s", str(e))
         finally:
             if self.nudge_task and not self.nudge_task.done():
                 self.nudge_task.cancel()
@@ -252,11 +252,11 @@ class FlowstateChat(BaseChat):
                 await self.websocket.close()
 
 
-async def flowstate_chat_websocket(websocket: WebSocket):
+async def do_chat_websocket(websocket: WebSocket):
     """
-    Entry point for the Flowstate chat WebSocket.
+    Entry point for the Do chat WebSocket.
 
     Args:
         websocket: The WebSocket connection
     """
-    await FlowstateChat.create_chat(websocket)
+    await DoChat.create_chat(websocket)

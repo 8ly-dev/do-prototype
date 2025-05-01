@@ -4,8 +4,8 @@ This module contains the LearnMoreSuggestedActionsAgent class for suggesting act
 
 from pydantic import BaseModel as PydanticModel, Field as PydanticField
 
-from flowstate.agents.base_agent import Agent
-from flowstate.agents.utils import get_small_model
+from do.agents.base_agent import Agent
+from do.agents.utils import get_small_model
 
 
 class SuggestedActions(PydanticModel):
@@ -31,7 +31,7 @@ class SuggestedActions(PydanticModel):
 class LearnMoreSuggestedActionsAgent(Agent[None, SuggestedActions]):
     """You'll be given messages in a conversation between USER and AGENT. In this conversation AGENT is representing a
     pre-seed startup (8ly) that is seeking both co-founders and financial backers. USER is either a potential
-    co-founder or financial backer attempting to evaluate 8ly and it's app, Flowstate. Based on the conversation,
+    co-founder or financial backer attempting to evaluate 8ly and it's app, Do. Based on the conversation,
     provide 3 guesses as to what the USER might ask next.
 
     Have a mindset of exploration, outside the box, digging deeper. Don't ask the same generic questions. Possible

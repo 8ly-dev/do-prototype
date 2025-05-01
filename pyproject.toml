@@ -1,7 +1,7 @@
 [project]
-name = "flowstate-prototype"
+name = "do-prototype"
 version = "0.1.0"
-description = "Add your description here"
+description = "Do - Task Management That's Innately You"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

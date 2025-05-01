@@ -1,5 +1,5 @@
 """
-This module contains the route handlers for the Flowstate application.
+This module contains the route handlers for the Do application.
 
 It defines the functions that handle HTTP requests to various routes,
 such as the homepage, login, logout, and project views.
@@ -11,8 +11,8 @@ from starlette.exceptions import HTTPException
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
-from flowstate.auth import verify_access_token, generate_access_token
-from flowstate.db_models import get_db
+from do.auth import verify_access_token, generate_access_token
+from do.db_models import get_db
 
 # Use the same template environment as app.py
 templates = Environment(

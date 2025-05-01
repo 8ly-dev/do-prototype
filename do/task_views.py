@@ -1,5 +1,5 @@
 """
-Task view handlers for the Flowstate application.
+Task view handlers for the Do application.
 
 This module provides request handlers for viewing and updating tasks,
 with support for different task types (todo, email, reminder, calendar, create_task).
@@ -12,10 +12,10 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 import json
 
-from flowstate.agents import EmailAgent, EmailHelperSuggestions
-from flowstate.auth import verify_access_token
-from flowstate.db_models import get_db, Task
-from flowstate.emails import Email, Sender
+from do.agents import EmailAgent, EmailHelperSuggestions
+from do.auth import verify_access_token
+from do.db_models import get_db, Task
+from do.emails import Email, Sender
 
 # Use the same template environment as app.py
 templates = Environment(

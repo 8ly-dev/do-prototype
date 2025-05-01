@@ -1,5 +1,5 @@
 """
-This module contains the main web application for Flowstate.
+This module contains the main web application for Do.
 
 It serves as the entry point for the application, configuring the Starlette app
 with routes, WebSocket handlers, exception handlers, and static files.
@@ -12,11 +12,11 @@ from starlette.exceptions import HTTPException
 from starlette.routing import Route, WebSocketRoute, Mount
 from starlette.staticfiles import StaticFiles
 
-from flowstate.views import homepage, login_get, login_post, logout, project_view, learn_more
-from flowstate.chats import flowstate_chat_websocket, LearnMoreChat
-from flowstate.chats.login import LoginChat
-from flowstate.exception_handlers import http_exception, not_found
-from flowstate.task_views import task_view, task_update
+from do.views import homepage, login_get, login_post, logout, project_view, learn_more
+from do.chats import do_chat_websocket, LearnMoreChat
+from do.chats.login import LoginChat
+from do.exception_handlers import http_exception, not_found
+from do.task_views import task_view, task_update
 
 
 app = Starlette(
@@ -30,8 +30,8 @@ app = Starlette(
         Route("/project/{project_slug}", project_view),
         Route("/task/{task_id:int}", task_view),
         Route("/task/{task_id:int}/update", task_update, methods=["POST"]),
-        WebSocketRoute("/ws", flowstate_chat_websocket),
-        WebSocketRoute("/ws/{project_id:int}", flowstate_chat_websocket),
+        WebSocketRoute("/ws", do_chat_websocket),
+        WebSocketRoute("/ws/{project_id:int}", do_chat_websocket),
         WebSocketRoute("/ws/learn-more", LearnMoreChat.create_chat),
         WebSocketRoute("/ws/login", LoginChat.create_chat),
         Mount("/static", app=StaticFiles(directory=Path(__file__).parent.parent / "resources" / "static"), name="static"),

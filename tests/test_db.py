@@ -2,14 +2,14 @@ import os
 import tempfile
 import pytest
 
-from flowstate.db_models import FlowstateDB  # Replace with your actual module name
+from do.db_models import DoDB  # Replace with your actual module name
 
 @pytest.fixture
 def temp_db():
     # Use a temporary file for the database
     fd, path = tempfile.mkstemp()
     os.close(fd)
-    db = FlowstateDB(db_path=path)
+    db = DoDB(db_path=path)
     yield db
     os.remove(path)
 

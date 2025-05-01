@@ -2,11 +2,11 @@ import pytest
 import base64
 import hmac
 from datetime import datetime, UTC
-from flowstate.auth import (
+from do.auth import (
     generate_access_token,
     verify_access_token,
 )
-import flowstate.auth
+import do.auth
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ class TestAccessTokenFlow:
 
         # Implementation would normally check timestamp freshness
         # This test just verifies cryptographic validity
-        flowstate.auth.SECRET_KEY = secret_key
+        do.auth.SECRET_KEY = secret_key
         assert verify_access_token(payload) == sample_user_id
 
     def test_tampered_user_id_fails(self, sample_user_id):

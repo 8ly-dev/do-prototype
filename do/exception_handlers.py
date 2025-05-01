@@ -1,5 +1,5 @@
 """
-This module contains the exception handlers for the Flowstate application.
+This module contains the exception handlers for the Do application.
 
 It defines the functions that handle HTTP exceptions and 404 errors.
 """

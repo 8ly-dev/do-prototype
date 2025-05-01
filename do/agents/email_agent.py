@@ -4,8 +4,8 @@ This module contains the EmailAgent class for generating email content.
 
 from pydantic import BaseModel as PydanticModel, Field as PydanticField
 
-from flowstate.agents.base_agent import Agent
-from flowstate.db_models import User
+from do.agents.base_agent import Agent
+from do.db_models import User
 
 
 class EmailHelperSuggestions(PydanticModel):
@@ -24,7 +24,7 @@ class EmailHelperSuggestions(PydanticModel):
 
 
 class EmailAgent(Agent):
-    """You are an email content generator for Flowstate, a task management tool.
+    """You are an email content generator for Do, a task management tool.
     Your purpose is to generate professional, well-structured email subjects and messages
     based on the context provided. You should create email content that is appropriate,
     clear, and effective for professional communication.
