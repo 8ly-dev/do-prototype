@@ -8,6 +8,33 @@ Do is the innate human task companion—where your intent becomes reality with l
 
 ---
 
+### Running the Prototype
+
+Create a `.do/secrets.toml` file with the following contents:
+
+```toml
+[llm-settings]
+google_token = "TOKEN-GOES-HERE"
+model = "gemini-2.5-pro-preview-03-25"
+small_model = "gemini-2.5-flash-preview-04-17"
+```
+
+**Next**
+
+If you have `uv` it'll handle installing all dependencies.
+
+```bash
+uv run uvicorn do.app:app --host 0.0.0.0 --port 8000
+```
+
+Alternatively you can use a Docker container.
+
+```bash
+docker build -t do-prototype .
+docker run -p 8000:8000 do-prototype
+```
+---
+
 ### Our Vision
 
 Current task tools overwhelm users with complexity. They force you to:
