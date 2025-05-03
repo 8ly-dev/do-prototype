@@ -32,6 +32,7 @@ app = Starlette(
         Route("/task/{task_id:int}/update", task_update, methods=["POST"]),
         WebSocketRoute("/ws", do_chat_websocket),
         WebSocketRoute("/ws/{project_id:int}", do_chat_websocket),
+        WebSocketRoute("/ws/{project_id:int}/{task_id:int}", do_chat_websocket),
         WebSocketRoute("/ws/learn-more", LearnMoreChat.create_chat),
         WebSocketRoute("/ws/login", LoginChat.create_chat),
         Mount("/static", app=StaticFiles(directory=Path(__file__).parent.parent / "resources" / "static"), name="static"),

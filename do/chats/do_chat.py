@@ -63,6 +63,7 @@ class DoChat(BaseChat):
         self.session_token = websocket.cookies.get("SESSION_TOKEN")
         self.user_id = verify_access_token(self.session_token) if self.session_token else None
         self.project_id = websocket.path_params.get("project_id")
+        self.task_id = websocket.path_params.get("task_id")
         self.user = None
         self.project = None
         self.agent = None
@@ -89,7 +90,7 @@ class DoChat(BaseChat):
             projects = self.db.get_projects_by_user(self.user_id)
             if len(projects) == 0:
                 await self.send_welcome_message()
-            else:
+            elif not self.task_id:
                 await self.send_next_task()
 
         # Start the nudge task
