@@ -77,11 +77,13 @@ class DoChat(BaseChat):
 
         self.user = self.db.get_user_by_id(self.user_id)
         self.project = self.db.get_project(self.project_id) if self.project_id else None
+        self.task = self.db.get_task(self.task_id) if self.task_id else None
 
         # Initialize the agent with the chat instance
         self.agent = DoAgent(
             user_id=self.user_id,
             project=self.project,
+            task=self.task,
             chat=self,
             user_timezone=int(self.websocket.query_params.get("tz_offset", 0)),
         )

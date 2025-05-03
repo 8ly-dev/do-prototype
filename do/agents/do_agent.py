@@ -76,14 +76,16 @@ class DoAgent(Agent):
 
     Tone:
     Natural, warm, and focused. Always prioritize clarity and helpfulness."""
-    def __init__(self, user_id: int = 0, project: Project | None = None, chat = None, user_timezone = int):
+    def __init__(self, user_id: int = 0, project: Project | None = None, task: Task | None = None, chat = None, user_timezone = int):
         """
-        Initialize the DoAgent with user and project information.
+        Initialize the DoAgent with user, project, and task information.
 
         Args:
             user_id: The ID of the user
             project: Optional project that the user is currently working on
+            task: Optional task that the user is currently working on
             chat: Optional chat instance for reporting tool usage
+            user_timezone: The user's timezone offset in minutes
         """
         self._db = get_db()
         self._user = self._db.get_user_by_id(user_id)
@@ -95,7 +97,11 @@ class DoAgent(Agent):
         if project:
             self.system_prompt += f"\n\nThe user is currently working in the project '{project.name}'. When a project is needed but not given, use the current project."
 
+        if task:
+            self.system_prompt += f"\n\nThe user is currently working on the task '{task.title}'. Focus on helping with this specific task."
+
         self.project_id = project.id if project else None
+        self.task_id = task.id if task else None
 
         report_tool = self._chat.send_using if self._chat else None
         super().__init__(report_tool, user_timezone=user_timezone)

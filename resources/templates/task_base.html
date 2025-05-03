@@ -4,6 +4,10 @@
 
 {% block body_class %}task{% endblock %}
 
+{% block websocket_path %}/ws/{{ current_project.id }}/{{ task.id }}{% endblock %}
+
+{% block body_attributes %} data-project-id="{{ current_project.id }}" data-task-id="{{ task.id }}"{% endblock %}
+
 {% block extra_head %}
 <style>
   /* All styles have been moved to the global CSS file */

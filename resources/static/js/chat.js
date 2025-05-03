@@ -172,7 +172,11 @@ class DoChat {
 
         // Check if we're on a project page and need to include the project ID
         const projectId = document.body.getAttribute('data-project-id');
-        if (projectId && path === '/ws') {
+        const taskId = document.body.getAttribute('data-task-id');
+
+        if (projectId && taskId && path === '/ws') {
+            path = `/ws/${projectId}/${taskId}`;
+        } else if (projectId && path === '/ws') {
             path = `/ws/${projectId}`;
         }
 
