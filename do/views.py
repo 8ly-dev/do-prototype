@@ -38,11 +38,18 @@ async def homepage(request: Request):
         user_id = verify_access_token(token)
         if user_id:
             db = get_db()
-            projects = db.get_projects_by_user(user_id)
-            top_task = db.get_users_top_task(user_id)
+            user = db.get_user_by_id(user_id)
+            if user:
+                projects = db.get_projects_by_user(user_id)
+                top_task = db.get_users_top_task(user_id)
 
-            template = templates.get_template("dashboard.html")
-            return HTMLResponse(template.render(projects=projects, top_task=top_task))
+                template = templates.get_template("dashboard.html")
+                return HTMLResponse(template.render(projects=projects, top_task=top_task))
+
+            else:
+                response = RedirectResponse(url="/", status_code=302)
+                response.delete_cookie("SESSION_TOKEN")
+                return response
 
     template = templates.get_template("login.html")
     return HTMLResponse(template.render())

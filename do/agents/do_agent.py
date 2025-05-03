@@ -89,7 +89,9 @@ class DoAgent(Agent):
         self._user = self._db.get_user_by_id(user_id)
         self._chat = chat
 
-        self.system_prompt = f"The current user is {self._user.username}.\n{self.system_prompt}"
+        if self._user:
+            self.system_prompt = f"The current user is {self._user.username}.\n{self.system_prompt}"
+
         if project:
             self.system_prompt += f"\n\nThe user is currently working in the project '{project.name}'. When a project is needed but not given, use the current project."
 
