@@ -13,7 +13,7 @@ from datetime import datetime, UTC
 import do.configs
 
 
-SECRET_KEY: bytes = do.secrets.get_secret(
+SECRET_KEY: bytes = do.configs.get_secret(
     "secret-key",
     default="default-secret-please-configure"
 ).encode()
