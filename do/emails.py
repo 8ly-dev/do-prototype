@@ -9,7 +9,7 @@ import smtplib
 from dataclasses import dataclass
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import do.secrets
+import do.configs
 
 
 @dataclass

@@ -10,7 +10,7 @@ import hmac
 from contextlib import suppress
 from datetime import datetime, UTC
 
-import do.secrets
+import do.configs
 
 
 SECRET_KEY: bytes = do.secrets.get_secret(

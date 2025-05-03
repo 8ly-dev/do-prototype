@@ -8,7 +8,7 @@ from pydantic_ai.models.gemini import GeminiModel
 from pydantic_ai.providers.google_gla import GoogleGLAProvider
 
 from do.agents.models import LLMSettings
-from do.secrets import get_secrets
+from do.configs import get_secrets
 
 _model = None
 _small_model = None

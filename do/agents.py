@@ -20,7 +20,7 @@ from pydantic import BaseModel as PydanticModel, Field as PydanticField
 from starlette.websockets import WebSocket
 
 from do.db_models import get_db, Project, Task, TaskType, User
-from do.secrets import get_secrets
+from do.configs import get_secrets
 
 from pydantic_ai.providers.google_gla import GoogleGLAProvider
 
