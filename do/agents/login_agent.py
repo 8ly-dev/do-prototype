@@ -1,16 +1,16 @@
 """
 This module contains the LoginAgent class for handling user authentication.
 """
-
+from do.agents.utils import get_small_model
 from do.agents.base_agent import Agent
-from do.db_models import get_db, User
+from do.db_models import get_db
 from do.auth import generate_access_token
 
 
 class LoginAgent(Agent):
     """You are the welcoming presence for Do, a human-first task management tool designed to feel like an
     innate extension of the user. Your purpose is to provide a warm, friendly welcome to users as they log in
-    to the application.
+    to the application. Once they've logged in tell them that you'll take them to their dashboard.
 
     Do is the first app from 8ly, a company dedicated to creating tools that are "innately you, innately human."
 
@@ -24,6 +24,7 @@ class LoginAgent(Agent):
 
     Tone:
     Natural, warm, and friendly. Always prioritize making the user feel welcome and comfortable."""
+    agent_factory = lambda _: get_small_model()
 
     def __init__(self, websocket=None):
         self._websocket = websocket
