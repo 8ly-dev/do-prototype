@@ -5,7 +5,7 @@ It defines the functions that handle HTTP requests to various routes,
 such as the homepage, login, logout, and project views.
 """
 
-from starlette.responses import HTMLResponse, RedirectResponse
+from starlette.responses import HTMLResponse, RedirectResponse, FileResponse
 from starlette.requests import Request
 from starlette.exceptions import HTTPException
 from jinja2 import Environment, FileSystemLoader
@@ -198,3 +198,17 @@ async def learn_more(request: Request):
     """
     template = templates.get_template("learn_more.html")
     return HTMLResponse(template.render())
+
+
+async def favicon(request: Request):
+    """
+    Serve the favicon.ico file from the static directory.
+
+    Args:
+        request: The incoming HTTP request
+
+    Returns:
+        A FileResponse with the favicon.ico file
+    """
+    favicon_path = Path(__file__).parent.parent / "resources" / "static" / "favicon.ico"
+    return FileResponse(favicon_path)

@@ -12,7 +12,7 @@ from starlette.exceptions import HTTPException
 from starlette.routing import Route, WebSocketRoute, Mount
 from starlette.staticfiles import StaticFiles
 
-from do.views import homepage, login_get, login_post, logout, project_view, learn_more
+from do.views import homepage, login_get, login_post, logout, project_view, learn_more, favicon
 from do.chats import do_chat_websocket, LearnMoreChat
 from do.chats.login import LoginChat
 from do.exception_handlers import http_exception, not_found
@@ -24,6 +24,7 @@ app = Starlette(
     routes=[
         Route("/", homepage),
         Route("/learn-more", learn_more),
+        Route("/favicon.ico", favicon),
         Route("/login", login_get, methods=["GET"]),
         Route("/login", login_post, methods=["POST"]),
         Route("/logout", logout),
