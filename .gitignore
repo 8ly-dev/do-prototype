@@ -13,3 +13,5 @@ wheels/
 secrets.*
 .DS_Store
 do.db
+.do/ # Ignore the .do directory which contains secrets.toml
+k8s/secrets.yaml # Ignore the Kubernetes secrets manifest
