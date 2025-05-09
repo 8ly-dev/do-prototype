@@ -91,13 +91,18 @@ def load_secrets(path: Path) -> dict[str, Any]:
     Load secrets from a TOML file.
 
     This function is cached, so subsequent calls with the same path will
-    return the same result without re-reading the file.
+    return the same result without re-reading the file. If the file
+    is not found, an empty dictionary is returned.
 
     Args:
         path: The path to the secrets TOML file
 
     Returns:
-        A dictionary containing the secrets from the TOML file
+        A dictionary containing the secrets from the TOML file, or an
+        empty dictionary if the file is not found.
     """
-    with path.resolve().open("rb") as f:
-        return tomllib.load(f)
+    try:
+        with path.resolve().open("rb") as f:
+            return tomllib.load(f)
+    except FileNotFoundError:
+        return {} # Return an empty dict if the file is not found

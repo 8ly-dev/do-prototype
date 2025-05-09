@@ -95,23 +95,47 @@ class LearnMoreAgent(Agent):
     async def read_file(self, file_path: str):
         """Activate this tool whenever you need to read a document. Use the file path to locate the file. If the file
         doesn't exist, you'll get an error message back."""
-        print(f"READING: {file_path}")
-        file_path = file_path.lower()
-        await self._chat.send_using(f"Reading {file_path.split('/')[-1]}")
-        if file_path in self._file_cache:
-            return self._file_cache[file_path]
+        print(f"READING (input): {file_path}")
+        
+        # Normalize the input file_path to lowercase for consistent lookups
+        # as the agent might be fed lowercase names due to normalization.
+        requested_file_lower = file_path.lower()
 
-        if file_path not in self._find_files():
-            print("- Access denied: File not found.")
+        await self._chat.send_using(f"Reading {file_path.split('/')[-1]}") # Display based on input
+
+        # Check cache using the lowercased version
+        if requested_file_lower in self._file_cache:
+            return self._file_cache[requested_file_lower]
+
+        # _find_files() now returns paths with original casing, relative to root.
+        available_files_original_case = self._find_files()
+        
+        path_to_open_relative = None
+        for original_cased_file_rel in available_files_original_case:
+            if original_cased_file_rel.lower() == requested_file_lower:
+                path_to_open_relative = original_cased_file_rel
+                break
+
+        if path_to_open_relative is None:
+            print(f"- Access denied: Normalized '{requested_file_lower}' not found in available files.")
             return f"Access denied: File {file_path} not found."
 
-        print(f"- {str(self._root)}/{file_path}")
-        with open(f"{str(self._root)}/{file_path}", "r") as f:
-            file = f.read()
-
-        self._file_cache[file_path] = file
-        print(f"- '{file[:20]}...")
-        return file
+        actual_path_on_disk = self._root / path_to_open_relative
+        print(f"- Attempting to open: {str(actual_path_on_disk)}")
+        try:
+            with actual_path_on_disk.open("r") as f:
+                file_content = f.read()
+            # Cache with the lowercased key for consistent future lookups
+            self._file_cache[requested_file_lower] = file_content
+            print(f"- Successfully read '{str(actual_path_on_disk)}'. Content: '{file_content[:20]}...")
+            return file_content
+        except FileNotFoundError:
+            # This case should ideally not be hit if _find_files is accurate and filesystem is consistent
+            print(f"- FileNotFoundError for: {str(actual_path_on_disk)} despite being in available list.")
+            return f"Error: File {file_path} could not be opened (unexpectedly not found)."
+        except Exception as e:
+            print(f"- Error opening {str(actual_path_on_disk)}: {e}")
+            return f"Error opening file {file_path}."
 
     def _find_files(self, path: Path | None = None) -> list[str]:
         """
@@ -124,7 +148,7 @@ class LearnMoreAgent(Agent):
             path: Optional path to search in, defaults to the project root
 
         Returns:
-            A list of file paths relative to the project root
+            A list of file paths (with original casing) relative to the project root
         """
         if not path and self._path_cache:
             return self._path_cache
@@ -134,10 +158,11 @@ class LearnMoreAgent(Agent):
             return []
 
         if _path.is_file():
-            return [str(_path).lower().replace(str(self._root).lower(), "").lstrip("/")]
+            # Return path relative to self._root, preserving case
+            return [str(_path.relative_to(self._root))]
 
         files = list(chain(*(self._find_files(child) for child in _path.iterdir())))
-        if not path:
+        if not path: # Caching the result if it's the initial call
             self._path_cache = files
 
         return files

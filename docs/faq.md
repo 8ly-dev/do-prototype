@@ -1,4 +1,4 @@
-# Flowstate & 8ly FAQ
+# Do & 8ly FAQ
 
 ## Team and Leadership
 
@@ -8,7 +8,7 @@ You're absolutely right that diverse founding teams often bring complementary sk
 
 ### Do you have the AI/ML expertise required for this product?
 
-While my background is in Computer Science with 20 years of coding experience, I recognize that specialized AI/ML expertise will be crucial for Flowstate's success. That's exactly why finding co-founders or early team members with strong AI/ML backgrounds is a priority. Meanwhile, I've been deepening my knowledge in these areas. The initial prototype demonstrates my technical capability to begin implementation, but I'm transparent about needing to build a team with specialized expertise to fully realize my vision.
+While my background is in Computer Science with 20 years of coding experience, I recognize that specialized AI/ML expertise will be crucial for Do's success. That's exactly why finding co-founders or early team members with strong AI/ML backgrounds is a priority. Meanwhile, I've been deepening my knowledge in these areas. The initial prototype demonstrates my technical capability to begin implementation, but I'm transparent about needing to build a team with specialized expertise to fully realize my vision.
 
 ### How will you attract top technical talent in the competitive AI space?
 
@@ -25,10 +25,14 @@ This challenge is precisely why I'm prioritizing building a complementary foundi
 
 ### Why should I believe you can execute on such an ambitious vision?
 
-My 20 years of coding experience and Computer Science degree have equipped me with the technical foundation needed to begin implementing Flowstate. What sets this apart from just another ambitious idea is that the vision emerged from solving real problems I've experienced personally with existing productivity tools. The prototype already demonstrates feasibility, showing that I can translate vision into execution. I recognize the scale of this challenge—that's why I'm seeking complementary co-founders and building relationships with advisors who have successfully scaled similar products. As Mike Mahlkow [notes in Forbes](https://www.forbes.com/councils/forbestechcouncil/2025/03/14/what-founders-get-wrong-about-fundraising-and-how-to-fix-it/), investors don't fund ideas; they fund execution. My track record of completing complex projects, combined with our clear roadmap and phased approach, demonstrates our commitment to disciplined execution.
+My 20 years of coding experience and Computer Science degree have equipped me with the technical foundation needed to begin implementing Do. What sets this apart from just another ambitious idea is that the vision emerged from solving real problems I've experienced personally with existing productivity tools. The prototype already demonstrates feasibility, showing that I can translate vision into execution. I recognize the scale of this challenge—that's why I'm seeking complementary co-founders and building relationships with advisors who have successfully scaled similar products. As Mike Mahlkow [notes in Forbes](https://www.forbes.com/councils/forbestechcouncil/2025/03/14/what-founders-get-wrong-about-fundraising-and-how-to-fix-it/), investors don't fund ideas; they fund execution. My track record of completing complex projects, combined with our clear roadmap and phased approach, demonstrates our commitment to disciplined execution.
 
 ### Do you have any industry experts or advisors supporting this venture?
 
 We're actively building our advisory network, focusing on individuals with expertise in AI/ML, UX design, productivity tools, and startup scaling. Our approach to advisors is quality over quantity—seeking meaningful engagements with experts who genuinely believe in our vision rather than collecting impressive names. As we formalize these relationships, they'll become powerful advocates when approaching investors.
 
 ## Market and Business Model Objections
+
+### The productivity tool market is saturated. Why will users switch to Do?
+
+You're right that the productivity market has many players, but it remains fundamentally broken for most users. Current tools force users to "manually prioritize, schedule, and track tasks," "juggle multiple apps for simple actions," and "sacrifice creativity and focus to rigid, robotic systems" as we note in our documentation. Do isn't just another task app—it represents a paradigm shift in how people interact with their tasks by eliminating the friction between thought and action. Our differentiator is making technology that feels "innately human" rather than adding to cognitive load. User research shows significant frustration with existing tools that require substantial manual management. By embedding action tools directly within tasks and enabling natural language input, we're addressing a persistent pain point that established players have failed to solve. The productivity market's size actually validates the opportunity—it's large enough that capturing even a small segment represents significant growth potential.
