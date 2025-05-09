@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: 8ly-do-website
+    namespace: 8ly
+    labels:
+        app: 8ly-do-website
+        tier: frontend
+spec:
+    strategy:
+        type: RollingUpdate
+        rollingUpdate:
+            maxSurge: 2
+            maxUnavailable: 50%
+    selector:
+        matchLabels:
+            app: 8ly-do-website
+            tier: frontend
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                app: 8ly-do-website
+                tier: frontend
+        spec:
+            imagePullSecrets: [] # Assuming no private registry for now, adjust if needed
+            volumes:
+              - name: do-db-storage
+                persistentVolumeClaim:
+                  claimName: do-db-pvc
+            initContainers:
+            - name: init-db-file
+              image: busybox
+              command: ['sh', '-c', 'touch /data/do.db && echo "Touched /data/do.db"']
+              volumeMounts:
+              - name: do-db-storage
+                mountPath: /data
+            topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: ScheduleAnyway
+              labelSelector:
+                  matchLabels:
+                      app: 8ly-do-website
+            containers:
+              - name: 8ly-do-app
+                image: zzmmrmn/8ly-do:latest
+                ports:
+                  - containerPort: 8000
+                envFrom:
+                  - secretRef:
+                      name: 8ly-do-secrets
+                volumeMounts:
+                  - name: do-db-storage
+                    mountPath: /app/do.db
+                    subPath: do.db
+                resources:
+                    requests:
+                        cpu: 100m
