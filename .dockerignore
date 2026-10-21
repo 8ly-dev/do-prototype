@@ -1,2 +1,14 @@
 do.db
 .do/
+
+# Never overwrite the image's validated environment or copy local secrets.
+.venv/
+**/.venv/
+.env
+**/.env
+.env.*
+**/.env.*
+.git/
+**/.git/
+__pycache__/
+**/__pycache__/
