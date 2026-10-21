@@ -66,5 +66,18 @@ class TrustPolicy(unittest.TestCase):
                     self.assertIn("verification failed", result.stderr)
 
 
+    def test_image_contexts_exclude_host_environments_and_secrets(self):
+        for dockerfile in ROOT.rglob("Dockerfile*"):
+            if not dockerfile.read_text().startswith("FROM python:"):
+                continue
+            with self.subTest(image=str(dockerfile.relative_to(ROOT))):
+                ignore = dockerfile.parent / ".dockerignore"
+                self.assertTrue(ignore.is_file(), "Exclude host state before COPY")
+                patterns = {line.strip().rstrip("/") for line in ignore.read_text().splitlines()}
+                for local_state in (".venv", ".env", ".git"):
+                    self.assertTrue(local_state in patterns or "**/" + local_state in patterns,
+                                    f"Exclude {local_state} from image context")
+
+
 if __name__ == "__main__":
     unittest.main()
